@@ -4,6 +4,7 @@ public class Speciality: EntityBase
 {
     public string Name { get; init; }
     public string Description { get; init; }
+    public bool IsDeleted { get; set; } = false;
 
     #region Constructor for EF
 #pragma warning disable CS8618

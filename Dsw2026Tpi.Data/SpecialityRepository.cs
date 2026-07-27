@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Dsw2026Tpi.Domain.Interfaces;
 using Dsw2026Tpi.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
