@@ -11,7 +11,7 @@ namespace Dsw2026Tpi.Application.Dtos;
     [StringLength(100,MinimumLength =3, ErrorMessage="The Name must be between 3 and 100 characters")]
     public String Name { get; set; } =string.Empty;
     [Required(ErrorMessage = "The Description is required")]
-    [StringLength(100, MinimumLength = 10, ErrorMessage = "The Description must be between 10 and 200 characters")]
+    [StringLength(100, MinimumLength = 10, ErrorMessage = "The Description must be between 10 and 100 characters")]
     public String Description { get; set; }=string.Empty;
 
 }
