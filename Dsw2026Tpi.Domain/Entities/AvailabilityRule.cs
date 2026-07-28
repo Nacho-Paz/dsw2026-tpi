@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Dsw2026Tpi.Domain.Entities
 {
-    internal class AvailabilityRule : EntityBase
+    public class AvailabilityRule : EntityBase
     {
         public Guid DoctorId { get; set; }
         public int Month { get; set; }

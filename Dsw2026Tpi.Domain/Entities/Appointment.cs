@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Dsw2026Tpi.Domain.Entities
 {
-    internal class Appointment : EntityBase
+    public class Appointment : EntityBase
     {
         public Guid AvailabilitySlotId { get; set; }
         public Guid PatientId { get; set; }

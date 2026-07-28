@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Dsw2026Tpi.Domain.Entities;
 
 namespace Dsw2026Tpi.Data.Configurations
 {

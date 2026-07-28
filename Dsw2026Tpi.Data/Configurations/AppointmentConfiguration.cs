@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Dsw2026Tpi.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;

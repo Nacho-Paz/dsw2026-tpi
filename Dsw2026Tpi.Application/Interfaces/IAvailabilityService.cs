@@ -1,10 +1,14 @@
-﻿using System;
+﻿using Dsw2026Tpi.Application.Dtos;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Dsw2026Tpi.Application.Interfaces
 {
-    internal class IAvailability
+    public interface IAvailabilityService
     {
+        Task CreateAvailabilitiesAsync(AvailabilityModel.Request request);
+        Task UpdateAvailabilitiesAsync(AvailabilityModel.Request request);
     }
 }
+
