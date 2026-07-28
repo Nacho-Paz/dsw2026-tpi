@@ -20,30 +20,30 @@ namespace Dsw2026Tpi.Api.Controllers
         //ENDPOINTS//
 
         [HttpGet]
-        public ActionResult<Pagination<SpecialityModel>> Get([FromQuery] SpecialityQueryFilter filter)
+        public async Task<ActionResult<Pagination<SpecialityModel>>> Get([FromQuery] SpecialityQueryFilter filter)
         {
-            var result = _specialityService.GetSpecialities(filter);
+            var result = await _specialityService.GetSpecialities(filter);
             return Ok(result);
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] SpecialityCreateModel model)
+        public async Task<IActionResult> Post([FromBody] SpecialityCreateModel model)
         {
-            var result = _specialityService.Createspeciality(model);
+            var result = await _specialityService.Createspeciality(model);
             return Ok(result);
         }
 
         [HttpPut("{id}")]
-        public ActionResult<SpecialityModel> Put(Guid id, [FromBody] SpecialityCreateModel model)
+        public async Task<ActionResult<SpecialityModel>>Put(Guid id, [FromBody] SpecialityCreateModel model)
         {
-            var result = _specialityService.UpdateSpeciality(id, model);
+            var result = await _specialityService.UpdateSpeciality(id, model);
             if(result==null) return NotFound();
             return Ok(result);
         }
 
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
             var result = _specialityService.DeleteSpeciality(id);
             if (!result) return NotFound();
