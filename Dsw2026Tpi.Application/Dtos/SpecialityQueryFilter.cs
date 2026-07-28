@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Dsw2026Tpi.Application.Dtos
 {
-    internal class SpecialityQueryFilter
+    public class SpecialityQueryFilter
     {
         public int pageSize {  get; set; }
         public int pageIndex { get; set; }
