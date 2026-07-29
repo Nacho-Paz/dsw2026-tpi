@@ -25,7 +25,6 @@ namespace Dsw2026Tpi.Data.Configurations
                    .IsRequired()
                    .HasDefaultValue("AVAILABLE");
 
-            // Configuración del Soft Delete según diagrama
             builder.Property(x => x.Deleted).HasDefaultValue(false);
 
             builder.HasIndex(x => new { x.AvailabilityRuleId, x.SlotDate, x.StartTime })

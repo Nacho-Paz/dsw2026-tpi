@@ -14,7 +14,5 @@ namespace Dsw2026Tpi.Domain.Entities
         public bool Deleted { get; set; } = false; 
         public AvailabilityRule AvailabilityRule { get; set; }
         public Appointment Appointment { get; set; }
-
-    {
     }
 }

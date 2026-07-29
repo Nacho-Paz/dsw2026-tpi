@@ -1,71 +1,82 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
+using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.Data;
 using Dsw2026Tpi.Domain.Entities;
-using System.Linq;
-using Dsw2026Tpi.Data;
+using Dsw2026Tpi.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Dsw2026Tpi.Application.Services
 {
-    public class AvailabilityService
+    public class AvailabilityService : IAvailabilityService
     {
-        private readonly Dsw2026TpiDbContext _context;
-
-        public AvailabilityService(Dsw2026TpiDbContext context)
+        private readonly IPersistence _persistence;
+        public AvailabilityService(IPersistence persistence)
         {
-            _context = context;
+            _persistence = persistence;
         }
 
         public async Task CreateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
             var now = DateTime.Now;
+            var existingRule = await _persistence.First<AvailabilityRule>(
+                r => r.DoctorId == request.DoctorId
+                  && r.Month == now.Month
+                  && r.Year == now.Year
+                  && !r.Deleted);
 
-            var existingRules = await _context.Set<AvailabilityRule>()
-                .AnyAsync(r => r.DoctorId == request.DoctorId
-                            && r.Month == now.Month
-                            && r.Year == now.Year
-                            && !r.Deleted);
-
-            if (existingRules)
+            if (existingRule != null)
             {
-                throw new ConflictException("El médico ya tiene disponibilidades asignadas para el mes.");
+                throw new ConflictException("AVAILABILITY_CONFLICT", "El médico ya tiene disponibilidades asignadas para este mes.");
             }
 
             var rules = GenerateRulesAndSlots(request, now.Month, now.Year);
 
-            await _context.Set<AvailabilityRule>().AddRangeAsync(rules);
-            await _context.SaveChangesAsync();
+            foreach (var rule in rules)
+            {
+                await _persistence.Add(rule);
+            }
         }
 
         public async Task UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
             var now = DateTime.Now;
 
+            var rulesToDelete = await _persistence.GetFiltered<AvailabilityRule>(
+                r => r.DoctorId == request.DoctorId
+                  && r.Month == now.Month
+                  && r.Year == now.Year
+                  && !r.Deleted,
+                "Slots");
 
-            var rulesToDelete = await _context.Set<AvailabilityRule>()
-                .Include(r => r.Slots)
-                .Where(r => r.DoctorId == request.DoctorId
-                         && r.Month == now.Month
-                         && r.Year == now.Year
-                         && !r.Deleted)
-                .ToListAsync();
-
-            foreach (var rule in rulesToDelete)
+            if (rulesToDelete != null && rulesToDelete.Any())
             {
-                rule.Deleted = true;
-                foreach (var slot in rule.Slots)
+                foreach (var rule in rulesToDelete)
                 {
-                    slot.Deleted = true;
+                    rule.Deleted = true;
+                    if (rule.Slots != null)
+                    {
+                        foreach (var slot in rule.Slots)
+                        {
+                            slot.Deleted = true;
+                        }
+                    }
+
+                    await _persistence.Update(rule);
                 }
             }
 
             var newRules = GenerateRulesAndSlots(request, now.Month, now.Year);
-            await _context.Set<AvailabilityRule>().AddRangeAsync(newRules);
 
-            await _context.SaveChangesAsync();
+            foreach (var rule in newRules)
+            {
+                await _persistence.Add(rule);
+            }
         }
 
         private List<AvailabilityRule> GenerateRulesAndSlots(AvailabilityModel.Request request, int month, int year)
@@ -80,7 +91,9 @@ namespace Dsw2026Tpi.Application.Services
                 var endTime = TimeSpan.Parse(dayRule.EndTime);
 
                 if (startTime >= endTime)
-                    throw new Exception($"El horario de inicio debe ser menor al de salida para el día {dayRule.Day}");
+                {
+                    throw new ConflictException("INVALID_TIME", $"El horario de inicio debe ser menor al de salida para el día {dayRule.Day}");
+                }
 
                 var rule = new AvailabilityRule
                 {
@@ -152,9 +165,8 @@ namespace Dsw2026Tpi.Application.Services
                 case "SÁBADO":
                     return DayOfWeek.Saturday;
                 default:
-                    throw new Exception("El día ingresado no es válido.");
+                    throw new ConflictException("INVALID_DAY", "El día ingresado no es válido.");
             }
         }
     }
 }
-

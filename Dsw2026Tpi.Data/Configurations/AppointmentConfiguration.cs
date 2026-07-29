@@ -30,11 +30,9 @@ namespace Dsw2026Tpi.Data.Configurations
             builder.Property(x => x.CancelledAt).IsRequired(false);
             builder.Property(x => x.AttendedAt).IsRequired(false);
 
-            // Esta es la línea clave para la concurrencia optimista
             builder.Property(x => x.RowVersion)
                    .IsRowVersion();
 
-            // Relación 1 a 1 con el Slot
             builder.HasOne(x => x.AvailabilitySlot)
                    .WithOne(x => x.Appointment)
                    .HasForeignKey<Appointment>(x => x.AvailabilitySlotId)
