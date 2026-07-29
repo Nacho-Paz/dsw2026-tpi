@@ -53,10 +53,6 @@ namespace Dsw2026Tpi.Application.Services
                 Description = s.Description
             });
 
-
-
-
-
         }
 
         public async Task<SpecialityModel> Createspeciality(SpecialityCreateModel model)
