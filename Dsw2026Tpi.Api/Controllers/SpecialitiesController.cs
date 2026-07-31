@@ -45,7 +45,7 @@ namespace Dsw2026Tpi.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var result = _specialityService.DeleteSpeciality(id);
+            var result = await _specialityService.DeleteSpeciality(id);
             if (!result) return NotFound();
             return NoContent();
         }

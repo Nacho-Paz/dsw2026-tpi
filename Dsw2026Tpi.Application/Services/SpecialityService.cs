@@ -88,7 +88,7 @@ namespace Dsw2026Tpi.Application.Services
             var existingEntity = await _repository.GetByIdAsync(id);
             if (existingEntity == null || existingEntity.IsDeleted) return false;
 
-            existingEntity.IsDeleted = true;
+            existingEntity.desactivate();
             await _repository.UpdateAsync(existingEntity);
             return true;
         }
