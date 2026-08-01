@@ -21,19 +21,33 @@ namespace Dsw2026Tpi.Application.Services
             _persistence = persistence;
         }
 
-        public async Task CreateAvailabilitiesAsync(AvailabilityModel.Request request)
+
+        public async Task<List<AvailabilityRule>> CreateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
+
+            // existe el medico en db?
+
             var now = DateTime.Now;
             var existingRule = await _persistence.First<AvailabilityRule>(
                 r => r.DoctorId == request.DoctorId
                   && r.Month == now.Month
                   && r.Year == now.Year
                   && !r.Deleted);
+            
 
             if (existingRule != null)
             {
                 throw new ConflictException("AVAILABILITY_CONFLICT", "El médico ya tiene disponibilidades asignadas para este mes.");
             }
+
+            /*
+            if ()
+                //ese dia no es feriado
+            { 
+                //se puede agregar disponibilidad
+            
+            }*/
+
 
             var rules = GenerateRulesAndSlots(request, now.Month, now.Year);
 
@@ -41,9 +55,16 @@ namespace Dsw2026Tpi.Application.Services
             {
                 await _persistence.Add(rule);
             }
+
+            foreach (var rule in rules)
+            {
+                await _persistence.Add(rule);
+            }
+
+            return rules;
         }
 
-        public async Task UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
+        public async Task<List<AvailabilityRule>> UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
             var now = DateTime.Now;
 
@@ -53,6 +74,11 @@ namespace Dsw2026Tpi.Application.Services
                   && r.Year == now.Year
                   && !r.Deleted,
                 "Slots");
+
+
+            // existe el medico en db?
+
+            // chequear si el slot a borrar tiene una cita y booked, arrojar excepcion 
 
             if (rulesToDelete != null && rulesToDelete.Any())
             {
@@ -77,10 +103,36 @@ namespace Dsw2026Tpi.Application.Services
             {
                 await _persistence.Add(rule);
             }
+
+            foreach (var rule in newRules)
+            {
+                await _persistence.Add(rule);
+            }
+
+            return newRules;
         }
 
         private List<AvailabilityRule> GenerateRulesAndSlots(AvailabilityModel.Request request, int month, int year)
         {
+            var groupedDays = request.Days.GroupBy(d => d.Day.Trim().ToUpper());
+
+            foreach (var group in groupedDays)
+            {
+                var sortedRanges = group.Select(d => new
+                {
+                    StartTime = TimeSpan.Parse(d.StartTime),
+                    EndTime = TimeSpan.Parse(d.EndTime)
+                }).OrderBy(r => r.StartTime).ToList();
+
+                for (int i = 0; i < sortedRanges.Count - 1; i++)
+                {
+                    if (sortedRanges[i + 1].StartTime < sortedRanges[i].EndTime)
+                    {
+                        throw new ConflictException("OVERLAPPING_TIMES", $"Se detectó un solapamiento en los horarios enviados para el día {group.Key}.");
+                    }
+                }
+            }
+
             var rules = new List<AvailabilityRule>();
             var daysInMonth = DateTime.DaysInMonth(year, month);
             var today = DateTime.Now.Date;
