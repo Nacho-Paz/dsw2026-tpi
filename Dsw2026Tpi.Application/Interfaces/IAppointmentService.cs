@@ -1,10 +1,14 @@
-﻿using System;
+﻿using Dsw2026Tpi.Application.Dtos;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Dsw2026Tpi.Application.Interfaces
 {
-    internal class IAppointmentService
+    public interface IAppointmentService
     {
+        Task CreateAppointmentAsync(AppointmentModel.Request request);
+        Task CancelAppointmentAsync(Guid appointmentId);
+        Task<object> GetActiveAppointmentsByPatientAsync(Guid pacientId);
     }
 }
