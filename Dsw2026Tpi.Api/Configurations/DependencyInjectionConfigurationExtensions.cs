@@ -13,6 +13,8 @@ public static class DependencyInjectionConfigurationExtensions
         services.AddScoped<IPersistence, PersistenceEf>();
         services.AddScoped<IDoctorService, DoctorService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<IAvailabilityService, AvailabilityService>();
+        services.AddScoped<IAppointmentService, AppointmentService>();
         services.AddScoped<ISignInService, SignInService>();
         services.AddSingleton<JwtService>();
         return services;

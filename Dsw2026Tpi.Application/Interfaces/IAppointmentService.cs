@@ -9,6 +9,6 @@ namespace Dsw2026Tpi.Application.Interfaces
     {
         Task CreateAppointmentAsync(AppointmentModel.Request request);
         Task CancelAppointmentAsync(Guid appointmentId);
-        Task<object> GetActiveAppointmentsByPatientAsync(Guid pacientId);
+        Task<object> GetActiveAppointmentsByPatientAsync(Guid patientId);
     }
 }

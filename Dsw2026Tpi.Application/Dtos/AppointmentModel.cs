@@ -8,7 +8,7 @@ namespace Dsw2026Tpi.Application.Dtos
     public record AppointmentModel
     {
         public record PatientDni(long dni);
-        public record Request (Guid DoctorId,Guid AvailabilityId, PatientDni Patient,string Reason);
+        public record Request (Guid DoctorId,Guid AvailabilityId, Guid PatientId,string Reason);
         public record Response(string Message);
     }
 }

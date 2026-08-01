@@ -16,7 +16,6 @@ namespace Dsw2026Tpi.Application.Services
         {
             _persistence = persistence;
         }
-
         public async Task CreateAppointmentAsync(AppointmentModel.Request request)
         {
             var slot = await _persistence.First<AvailabilitySlot>(
@@ -43,7 +42,7 @@ namespace Dsw2026Tpi.Application.Services
             var appointment = new Appointment
             {
                 AvailabilitySlotId = slot.Id,
-                PatientId = request ??
+                PatientId = request.PatientId, 
                 Reason = request.Reason,
                 Status = "BOOKED"
             };
@@ -53,6 +52,28 @@ namespace Dsw2026Tpi.Application.Services
             await _persistence.Add(appointment);
             await _persistence.Update(slot);
         }
+
+        public async Task<object> GetActiveAppointmentsByPatientAsync(Guid patientId)
+        {
+            var activeAppointments = await _persistence.GetFiltered<Appointment>(
+                a => a.PatientId == patientId && a.Status == "BOOKED",
+                "AvailabilitySlot.AvailabilityRule.Doctor"
+            );
+
+            if (activeAppointments == null || !activeAppointments.Any())
+            {
+                return new object[] { };
+            }
+
+            return activeAppointments.Select(a => new
+            {
+                AppointmentId = a.Id,
+                DoctorName = a.AvailabilitySlot.AvailabilityRule.Doctor.Name,
+                Date = a.AvailabilitySlot.SlotDate,
+                StartTime = a.AvailabilitySlot.StartTime,
+                Status = a.Status
+            }).ToList();
+        }        
 
         public async Task CancelAppointmentAsync(Guid appointmentId)
         {
@@ -76,34 +97,6 @@ namespace Dsw2026Tpi.Application.Services
 
             await _persistence.Update(appointment);
             await _persistence.Update(appointment.AvailabilitySlot);
-        }
-
-        public async Task<object> GetActiveAppointmentsByPatientAsync(long dni)
-        {
-            var patient = await _persistence.First<??>(p => p.Dni == dni.ToString());
-            if (patient == null)
-            {
-                throw new ConflictException("PATIENT_NOT_FOUND", "Paciente no encontrado.");
-            }
-
-            var activeAppointments = await _persistence.GetFiltered<Appointment>(
-                a => a.PatientId == patient.Id && a.Status == "BOOKED",
-                "AvailabilitySlot.AvailabilityRule.Doctor"
-            );
-
-            if (activeAppointments == null || !activeAppointments.Any())
-            {
-                return new object[] { };
-            }
-
-            return activeAppointments.Select(a => new
-            {
-                AppointmentId = a.Id,
-                DoctorName = a.AvailabilitySlot.AvailabilityRule.Doctor.Name,
-                Date = a.AvailabilitySlot.SlotDate,
-                StartTime = a.AvailabilitySlot.StartTime,
-                Status = a.Status
-            }).ToList();
         }
     }
 }

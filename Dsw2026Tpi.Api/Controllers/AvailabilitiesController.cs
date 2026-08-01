@@ -5,14 +5,14 @@ namespace Dsw2026Tpi.Api.Controllers
 {
     [ApiController]
     [Route("api/availability")]
-    public class AvailabilityController : ControllerBase
+    public class AvailabilitiesController : ControllerBase
     {
         private readonly IAvailabilityService _availabilityService;
-        public AvailabilityController(IAvailabilityService availabilityService)
+        public AvailabilitiesController(IAvailabilityService availabilityService)
         {
             _availabilityService = availabilityService;
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> CreateAvailabilities([FromBody] AvailabilityModel.Request request)
         {
