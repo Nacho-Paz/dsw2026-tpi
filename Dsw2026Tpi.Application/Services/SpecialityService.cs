@@ -23,7 +23,7 @@ namespace Dsw2026Tpi.Application.Services
                 s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name))); ;
 
 
-            var query = specialitiesList.ToList()
+            var query = specialitiesList.ToList();
 
 
             var totalRecords = query.Count();
