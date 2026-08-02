@@ -19,9 +19,9 @@ public class DoctorService : IDoctorService
         var doctors = await _persistence.Paginate<Doctor, string>(
             pageSize, 
             pageIndex,
-            d => string.IsNullOrWhiteSpace(name) ||d.Name.Contains(name),
-            x => x.Name, 
-            nameof(Doctor.Speciality));
+           d => d.IsActive && (string.IsNullOrWhiteSpace(name) || d.Name.Contains(name)),
+           x => x.Name,
+           nameof(Doctor.Speciality));
 
         return doctors.Map(d => new DoctorModel.Response(d.Id, d.Name, d.LicenseNumber,
             new DoctorModel.SpecialityDto(d.Speciality?.Id, d.Speciality?.Name)));
@@ -33,8 +33,8 @@ public class DoctorService : IDoctorService
         if (doctor == null) return null;
         var now= DateTime.Now;
         var rules = await _persistence.GetFiltered<AvailabilityRule>(
-     r => r.DoctorId == doctorId && r.Month == now.Month && r.Year == now.Year && !r.Deleted,
-     "Slots");
+            r => r.DoctorId == doctorId && r.Month == now.Month && r.Year == now.Year && !r.Deleted,
+            "Slots");
 
         if (rules == null || !rules.Any())
         {
@@ -48,6 +48,69 @@ public class DoctorService : IDoctorService
             r.EndTime.ToString(@"hh\:mm"))).ToList();
 
     }
-    
+
+    async Task<DoctorModel.Response?> CreateDoctor(DoctorModel.Request model)
+    {
+        var speciality = await _persistence.First<Speciality>(s => s.Id == model.SpecialityId && !s.IsDeleted);
+        if (speciality == null)
+        {
+            return null;
+        }
+
+        var newDoctor = new Doctor(model.Name, model.LicenseNumber, speciality);
+        await _persistence.Add(newDoctor);
+
+        return new DoctorModel.Response(
+            newDoctor.Id,
+            newDoctor.Name,
+            newDoctor.LicenseNumber,
+            new DoctorModel.SpecialityDto(speciality.Id, speciality.Name));
+
+
+
+    }
+
+    async Task<DoctorModel.Response?> UpdateDoctor(Guid id, DoctorModel.Request model)
+    {
+        var existingEntity = await _persistence.First<Doctor>(d => d.Id == id && d.IsActive);
+        if (existingEntity == null)
+        {
+            return null;
+        }
+
+        var speciality = await _persistence.First<Speciality>(s => s.Id == model.SpecialityId && !s.IsDeleted);
+        if (speciality == null)
+        {
+            return null;
+        }
+
+        existingEntity.UpdateData(model.Name, model.LicenseNumber, speciality);
+        await _persistence.Update(existingEntity);
+
+        return new DoctorModel.Response(
+            existingEntity.Id,
+            existingEntity.Name,
+            existingEntity.LicenseNumber,
+            new DoctorModel.SpecialityDto(speciality.Id, speciality.Name));
+
+    }
+
+    async Task<bool> DeleteDoctor(Guid id)
+    {
+
+        var existingEntity = await _persistence.First<Doctor>(d => d.Id == id && d.IsActive);
+        if (existingEntity == null)
+        {
+            return false;
+        }
+
+        existingEntity.Deactivate();
+        await _persistence.Update(existingEntity);
+        return true;
+    }
+
+
+}
+
 
 }
