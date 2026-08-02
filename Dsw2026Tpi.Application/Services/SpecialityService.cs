@@ -7,21 +7,28 @@ using System.Threading.Tasks;
 using Dsw2026Tpi.Data;
 using System;
 
+
+using Dsw2026Tpi.CrossCutting.Exceptions;
+
 namespace Dsw2026Tpi.Application.Services
 {
     public class SpecialityService : ISpecialityService
     {
         private readonly IPersistence _persistence;
-        public SpecialityService(IPersistence _persistence)
+        public SpecialityService(IPersistence persistence)
         {
-            _persistence = _persistence;
+            _persistence = persistence;
         }
 
         public async Task<Pagination<SpecialityModel>> GetSpecialities(SpecialityQueryFilter filter)
         {
             var specialitiesList = await _persistence.GetFiltered<Speciality>(
-                s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name))); ;
+                s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name))); 
 
+            if (specialitiesList == null || !specialitiesList.Any())
+            {
+                throw new EntityNotFoundException("No specialities found.");
+            }
 
             var query = specialitiesList.ToList();
 
@@ -56,6 +63,20 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task<SpecialityModel> Createspeciality(SpecialityCreateModel model)
         {
+            if (model.Name==null || model.Description == null){
+                throw new ValidationException(); //TODO: Add a message to the exception
+
+            }
+            if(model.Name.Length < 3 || model.Name.Length > 100)
+            {
+                throw new ValidationException(); //TODO: Add a message to the exception
+            }
+            if (model.Description.Length < 10 || model.Description.Length > 100)
+            {
+                throw new ValidationException(); //TODO: Add a message to the exception
+            }
+
+    
             var newSpeciality = new Speciality(model.Name, model.Description);
             await _persistence.Add(newSpeciality);
             return new SpecialityModel
@@ -68,6 +89,21 @@ namespace Dsw2026Tpi.Application.Services
         }
         public async Task<SpecialityModel> UpdateSpeciality(Guid id, SpecialityCreateModel model)
         {
+
+            if (model.Name == null || model.Description == null)
+            {
+                throw new ValidationException(); //TODO: Add a message to the exception
+
+            }
+            if (model.Name.Length < 3 || model.Name.Length > 100)
+            {
+                throw new ValidationException(); //TODO: Add a message to the exception
+            }
+            if (model.Description.Length < 10 || model.Description.Length > 100)
+            {
+                throw new ValidationException(); //TODO: Add a message to the exception
+            }
+
             var existingEntity = await _persistence.First<Speciality>(s => s.Id == id);
             if (existingEntity == null || existingEntity.IsDeleted) return null;
 
@@ -84,10 +120,11 @@ namespace Dsw2026Tpi.Application.Services
         }
         public async Task<bool> DeleteSpeciality(Guid id)
         {
+     
             var existingEntity = await _persistence.First<Speciality>(s => s.Id == id);
             if (existingEntity == null || existingEntity.IsDeleted) return false;
 
-            existingEntity.desactivate();
+            existingEntity.Desactivate();
             await _persistence.Update(existingEntity);
             return true;
         }

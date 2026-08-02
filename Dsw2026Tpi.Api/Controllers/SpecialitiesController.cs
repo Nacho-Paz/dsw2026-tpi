@@ -33,7 +33,7 @@ namespace Dsw2026Tpi.Api.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:guid}")]
         public async Task<ActionResult<SpecialityModel>>Put(Guid id, [FromBody] SpecialityCreateModel model)
         {
             var result = await _specialityService.UpdateSpeciality(id, model);
@@ -42,7 +42,7 @@ namespace Dsw2026Tpi.Api.Controllers
         }
 
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var result = await _specialityService.DeleteSpeciality(id);
