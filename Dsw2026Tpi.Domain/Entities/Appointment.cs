@@ -8,6 +8,7 @@ namespace Dsw2026Tpi.Domain.Entities
     {
         public Guid AvailabilitySlotId { get; set; }
         public Guid PatientId { get; set; }
+        public Patient Patient { get; set; }
         public string Reason { get; set; }
         public string Status { get; set; }
         public DateTime? CancelledAt { get; set; }

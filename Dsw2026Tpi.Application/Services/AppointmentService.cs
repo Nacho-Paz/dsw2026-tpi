@@ -5,11 +5,12 @@ using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace Dsw2026Tpi.Application.Services
 {
-    public class AppointmentService : IAppointmentService
+    public class AppointmentService : IAppointmentService // revisar error
     {
         private readonly IPersistence _persistence;
         public AppointmentService(IPersistence persistence)
@@ -39,10 +40,14 @@ namespace Dsw2026Tpi.Application.Services
                 throw new ConflictException("INVALID_DATE", "No se pueden reservar turnos pasados.");
             }
 
+            var patient = await _persistence.First<Patient>(p => p.Dni == request.Patient.Dni.ToString());
+            if (patient == null)
+                throw new ConflictException("PATIENT_NOT_FOUND", "El paciente no existe en el sistema.");
+
             var appointment = new Appointment
             {
                 AvailabilitySlotId = slot.Id,
-                PatientId = request.PatientId, 
+                PatientId = request.PatientId,
                 Reason = request.Reason,
                 Status = "BOOKED"
             };
@@ -53,12 +58,11 @@ namespace Dsw2026Tpi.Application.Services
             await _persistence.Update(slot);
         }
 
-        public async Task<object> GetActiveAppointmentsByPatientAsync(Guid patientId)
+        public async Task<object> GetActiveAppointmentsByPatientAsync(long //tiene que recibir dni )
         {
-            var activeAppointments = await _persistence.GetFiltered<Appointment>(
-                a => a.PatientId == patientId && a.Status == "BOOKED",
-                "AvailabilitySlot.AvailabilityRule.Doctor"
-            );
+           /* var activeAppointments = await _persistence.GetFiltered<Appointment>(
+            a => a.PatientId == patientId && a.Status == "BOOKED",
+            "AvailabilitySlot.AvailabilityRule.Doctor" ); */ 
 
             if (activeAppointments == null || !activeAppointments.Any())
             {
