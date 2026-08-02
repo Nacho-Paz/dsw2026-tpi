@@ -32,7 +32,7 @@ namespace Dsw2026Tpi.Data.Configurations
                    .HasDatabaseName("UNIQUE_Rule_DateTime");
             builder.HasOne(x => x.AvailabilityRule)
                    .WithMany(x => x.Slots)
-                   .HasForeignKey(x => x.AvailabilityRuleId));
+                   .HasForeignKey(x => x.AvailabilityRuleId);
         }
     }
 }
