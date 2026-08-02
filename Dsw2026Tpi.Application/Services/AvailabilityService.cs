@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace Dsw2026Tpi.Application.Services
@@ -21,7 +21,7 @@ namespace Dsw2026Tpi.Application.Services
             _persistence = persistence;
         }
 
-        public async Task CreateAvailabilitiesAsync(AvailabilityModel.Request request)
+        public async Task<List<AvailabilityRule>> CreateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
             var now = DateTime.Now;
             var existingRule = await _persistence.First<AvailabilityRule>(
@@ -40,10 +40,10 @@ namespace Dsw2026Tpi.Application.Services
             foreach (var rule in rules)
             {
                 await _persistence.Add(rule);
-            }
+            } return rules;
         }
 
-        public async Task UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
+        public async Task<List<AvailabilityRule>> UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
             var now = DateTime.Now;
 
@@ -76,11 +76,28 @@ namespace Dsw2026Tpi.Application.Services
             foreach (var rule in newRules)
             {
                 await _persistence.Add(rule);
-            }
+            } return newRules;
         }
 
         private List<AvailabilityRule> GenerateRulesAndSlots(AvailabilityModel.Request request, int month, int year)
         {
+            var groupedDays = request.Days.GroupBy(d => d.Day.Trim().ToUpper());
+            foreach (var group in groupedDays)
+            {
+                var sortedRanges = group.Select(d => new
+                {
+                    StartTime = TimeSpan.Parse(d.StartTime),
+                    EndTime = TimeSpan.Parse(d.EndTime)
+                }).OrderBy(r => r.StartTime).ToList();
+                for (int i = 0; i < sortedRanges.Count - 1; i++)
+                {
+                    if (sortedRanges[i + 1].StartTime < sortedRanges[i].EndTime)
+                    {
+                        throw new ConflictException("OVERLAPPING_TIMES", $"Se detectó un solapamiento en los horarios enviados para el día { group.Key }.");
+                    }
+                }
+            }
+
             var rules = new List<AvailabilityRule>();
             var daysInMonth = DateTime.DaysInMonth(year, month);
             var today = DateTime.Now.Date;

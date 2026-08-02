@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace Dsw2026Tpi.Api.Controllers
 {
     [ApiController]
-    [Route("api/availability")]
-    public class AvailabilityController : ControllerBase
+    [Route("api/availabilities")]
+    public class AvailabilitiesController : ControllerBase
     {
         private readonly IAvailabilityService _availabilityService;
-        public AvailabilityController(IAvailabilityService availabilityService)
+        public AvailabilitiesController(IAvailabilityService availabilityService)
         {
             _availabilityService = availabilityService;
         }
@@ -27,6 +27,7 @@ namespace Dsw2026Tpi.Api.Controllers
             await _availabilityService.UpdateAvailabilitiesAsync(request);
             return Ok(new AvailabilityModel.Response("Disponibilidades actualizadas con éxito."));
         }
-        }
     }
+    
+}
 
