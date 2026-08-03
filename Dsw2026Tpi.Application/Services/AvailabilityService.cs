@@ -1,10 +1,12 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
+using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -21,6 +23,16 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task<List<AvailabilityRule>> CreateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
+            if (request == null)
+            {
+                throw new ValidationException("El cuerpo de la solicitud es obligatorio.", ErrorCodes.VALIDATION_ERROR);
+            }
+
+            if (request.Days == null || !request.Days.Any())
+            {
+                throw new ValidationException("Debe enviar al menos un día de disponibilidad.", ErrorCodes.VALIDATION_ERROR);
+            }
+
             var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId && d.IsActive);
 
             if (doctor == null)
@@ -52,6 +64,16 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task<List<AvailabilityRule>> UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
+            if (request == null)
+            {
+                throw new ValidationException("El cuerpo de la solicitud es obligatorio.", ErrorCodes.VALIDATION_ERROR);
+            }
+
+            if (request.Days == null || !request.Days.Any())
+            {
+                throw new ValidationException("Debe enviar al menos un día de disponibilidad.", ErrorCodes.VALIDATION_ERROR);
+            }
+
             var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId && d.IsActive);
 
             if (doctor == null)
@@ -132,13 +154,26 @@ namespace Dsw2026Tpi.Application.Services
 
             foreach (var dayRule in request.Days)
             {
-                var startTime = TimeSpan.Parse(dayRule.StartTime);
-                var endTime = TimeSpan.Parse(dayRule.EndTime);
+                if (!TimeSpan.TryParse(dayRule.StartTime, out var startTime))
+                    {
+                        throw new ConflictException(
+                            "INVALID_TIME_FORMAT",
+                            $"El horario de inicio del día {dayRule.Day} tiene un formato inválido.");
+                    }
+
+                if (!TimeSpan.TryParse(dayRule.EndTime, out var endTime))
+                    {
+                        throw new ConflictException(
+                            "INVALID_TIME_FORMAT",
+                            $"El horario de fin del día {dayRule.Day} tiene un formato inválido.");
+                    }
 
                 if (startTime >= endTime)
-                {
-                    throw new ConflictException("INVALID_TIME", $"El horario de inicio debe ser menor al de salida para el día {dayRule.Day}");
-                }
+                    {
+                        throw new ConflictException(
+                            "INVALID_TIME",
+                            $"El horario de inicio debe ser menor al de salida para el día {dayRule.Day}");
+                    }
 
                 var rule = new AvailabilityRule
                 {

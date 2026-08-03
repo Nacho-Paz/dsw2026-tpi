@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Dsw2026Tpi.Api.Controllers
 {

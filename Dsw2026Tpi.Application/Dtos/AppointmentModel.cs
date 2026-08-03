@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using static Dsw2026Tpi.Application.Dtos.AppointmentModel;
 
 namespace Dsw2026Tpi.Application.Dtos
 {

@@ -35,6 +35,7 @@ namespace Dsw2026Tpi.Data.Configurations
 
             builder.HasIndex(x => new { x.DoctorId, x.SlotDate, x.StartTime }) 
                 .IsUnique()
+                .HasFilter("[Deleted] = 0")
                 .HasDatabaseName("UNIQUE_Doctor_Slot_Time");
 
             builder.HasOne(x => x.AvailabilityRule)
