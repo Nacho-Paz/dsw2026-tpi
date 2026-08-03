@@ -160,31 +160,34 @@ namespace Dsw2026Tpi.Application.Services
                 parsedDate = tempDate.Date;
             }
 
-            var allAppointments = await _persistence.GetFiltered<Appointment>(
-                a => (!parsedDate.HasValue || a.AvailabilitySlot.SlotDate.Date == parsedDate.Value) &&
-                     (!doctorId.HasValue || a.AvailabilitySlot.AvailabilityRule.DoctorId == doctorId.Value) &&
-                     (!dni.HasValue || a.Patient.Dni == dni.Value.ToString()),
-                "AvailabilitySlot.AvailabilityRule.Doctor.Specialty,Patient"
+            System.Linq.Expressions.Expression<Func<Appointment, bool>> predicate = a =>
+            (!parsedDate.HasValue || (a.AvailabilitySlot != null && a.AvailabilitySlot.SlotDate.Date == parsedDate.Value)) &&
+            (!doctorId.HasValue || (a.AvailabilitySlot != null && a.AvailabilitySlot.AvailabilityRule != null && a.AvailabilitySlot.AvailabilityRule.DoctorId == doctorId.Value)) &&
+            (!dni.HasValue || (a.Patient != null && a.Patient.Dni == dni.Value.ToString())) &&
+            (!specialtyId.HasValue || (a.AvailabilitySlot != null &&
+                                a.AvailabilitySlot.AvailabilityRule != null &&
+                               a.AvailabilitySlot.AvailabilityRule.Doctor != null &&
+                               a.AvailabilitySlot.AvailabilityRule.Doctor.Speciality != null &&
+                               a.AvailabilitySlot.AvailabilityRule.Doctor.Speciality.Id == specialtyId.Value));
+
+            System.Linq.Expressions.Expression<Func<Appointment, DateTime>> sortOrder = a => a.AvailabilitySlot.SlotDate;
+
+            var pagedResult = await _persistence.Paginate(
+                pageSize,
+                pageIndex,
+                predicate,
+                sortOrder,
+                "AvailabilitySlot.AvailabilityRule.Doctor.Speciality",
+                "Patient"
             );
 
-            allAppointments ??= new List<Appointment>();
-            if (!allAppointments.Any())
+
+            if (pagedResult == null || !pagedResult.Data.Any())
             {
                 return Pagination<AppointmentModel.SearchItem>.Empty;
             }
 
-            if (specialtyId.HasValue)
-            {
-                allAppointments = allAppointments.Where(a =>
-                    a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Speciality?.Id == specialtyId.Value).ToList();
-            }
-
-            int totalRecords = allAppointments.Count();
-            var pagedAppointments = allAppointments
-                .Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-            var data = pagedAppointments.Select(a => new AppointmentModel.SearchItem(
+            var data = pagedResult.Data.Select(a => new AppointmentModel.SearchItem(
                 AppointmentsId: a.Id,
                 AppointmentsStatus: a.Status,
                 Patient: new AppointmentModel.PatientInfo(
@@ -196,12 +199,12 @@ namespace Dsw2026Tpi.Application.Services
                     Specialty: new AppointmentModel.SpecialtyInfo(
                         SpecialtyId: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Speciality?.Id ?? Guid.Empty,
                         Name: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Speciality?.Name ?? "")
-                                                        )));
+                )));
 
             return new Pagination<AppointmentModel.SearchItem>(
-                pageSize,
-                pageIndex,
-                totalRecords,
+                pagedResult.PageSize,
+                pagedResult.PageIndex,
+                pagedResult.Total,
                 data);
         }
     }
