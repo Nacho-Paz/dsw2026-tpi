@@ -3,6 +3,7 @@ using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,8 @@ namespace Dsw2026Tpi.Application.Services
         }
         public async Task<AppointmentModel.Response> CreateAppointmentAsync(AppointmentModel.Request request)
         {
-            if (request.Patient.Dni.ToString().Length < 7 || request.Patient.Dni.ToString().Length > 10)
+            string dniString = request.Patient.Dni.ToString();
+            if (dniString.Length < 7 || dniString.Length > 10)
             {
                 throw new ValidationException("El DNI debe tener entre 7 y 10 dígitos.", "INVALID_DNI");
             }
@@ -50,7 +52,7 @@ namespace Dsw2026Tpi.Application.Services
                 throw new ConflictException("INVALID_DATE", "No se pueden reservar turnos pasados.");
             }
 
-            var patient = await _persistence.First<Patient>(p => p.Dni == request.Patient.Dni.ToString());
+            var patient = await _persistence.First<Patient>(p => p.Dni == dniString);
             if (patient == null)
                 throw new ConflictException("PATIENT_NOT_FOUND", "El paciente no existe en el sistema.");
 
@@ -65,7 +67,15 @@ namespace Dsw2026Tpi.Application.Services
             slot.Status = "BOOKED";
 
             await _persistence.Add(appointment);
-            await _persistence.Update(slot);
+            
+            try
+            {
+                await _persistence.Update(slot);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new ConflictException("APPOINTMENT_CONFLICT", "Slot already booked");
+            }
 
             return new AppointmentModel.Response(
                 appointment.Id,
