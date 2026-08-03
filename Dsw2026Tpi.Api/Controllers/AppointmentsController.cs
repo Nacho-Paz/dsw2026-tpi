@@ -1,9 +1,10 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using static Dsw2026Tpi.Application.Dtos.AppointmentModel;
+using Dsw2026Tpi.CrossCutting.Identity;
 
 namespace Dsw2026Tpi.Api.Controllers
 {
@@ -20,7 +21,7 @@ namespace Dsw2026Tpi.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "PACIENTE")]
+        [Authorize(Roles=Roles.Patient)]
         [EnableRateLimiting("PatientBookingPolicy")]
         public async Task<IActionResult> Create([FromBody] AppointmentModel.Request request)
         {
@@ -28,8 +29,8 @@ namespace Dsw2026Tpi.Api.Controllers
             return Created(string.Empty, appointmentCreated);
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "PACIENTE, ADMINISTRADOR")]
+        [HttpDelete("{id:guid}")]
+        [Authorize(Roles = Roles.Patient + "," + Roles.Administrator)]
         public async Task<IActionResult> Cancel(Guid id)
         {
             await _appointmentService.CancelAppointmentAsync(id);
@@ -38,7 +39,7 @@ namespace Dsw2026Tpi.Api.Controllers
         }
 
         [HttpGet("patient")]
-        [Authorize(Roles = "PACIENTE, ADMINISTRADOR")]
+        [Authorize(Roles = Roles.Patient + ", " + Roles.Administrator)]
         public async Task<IActionResult> GetPatientAppointments([FromQuery] long dni)
         {
             var appointments = await _appointmentService.GetActiveAppointmentsByPatientAsync(dni);
@@ -47,7 +48,7 @@ namespace Dsw2026Tpi.Api.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "ADMINISTRADOR")]
+        [Authorize(Roles = Roles.Administrator)]
         public async Task<IActionResult> GetByDate([FromQuery] string date)
         {
             var result = await _appointmentService.GetAppointmentsByDateAsync(date);
@@ -55,7 +56,7 @@ namespace Dsw2026Tpi.Api.Controllers
         }
 
         [HttpGet("search")]
-        [Authorize(Roles = "ADMINISTRADOR")]
+        [Authorize(Roles = Roles.Administrator)]
         public async Task<IActionResult> Search(
             [FromQuery] int pageSize,
             [FromQuery] int pageIndex,
@@ -70,3 +71,5 @@ namespace Dsw2026Tpi.Api.Controllers
 
     }
 }
+
+//TODO: Revisar endpoints con el tpi

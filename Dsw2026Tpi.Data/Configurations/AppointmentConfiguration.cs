@@ -25,7 +25,7 @@ namespace Dsw2026Tpi.Data.Configurations
             builder.Property(x => x.Status)
                    .HasMaxLength(20)
                    .IsRequired()
-                   .HasDefaultValue("BOOKED");
+                   .HasDefaultValue("BOOKED"); // TODO:revisar Estados con enum
 
             builder.Property(x => x.CancelledAt).IsRequired(false);
             builder.Property(x => x.AttendedAt).IsRequired(false);

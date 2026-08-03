@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-
+//TODO: revisar status
 namespace Dsw2026Tpi.Application.Services
 {
     public class AvailabilityService : IAvailabilityService

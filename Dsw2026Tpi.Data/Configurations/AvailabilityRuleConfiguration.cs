@@ -24,7 +24,7 @@ namespace Dsw2026Tpi.Data.Configurations
                 builder.Property(x => x.Deleted).HasDefaultValue(false);
 
                 builder.HasIndex(x => new { x.DoctorId, x.Year, x.Month, x.DayOfWeek, x.StartTime, x.EndTime })
-                       .IsUnique()
+                       .IsUnique()//TODO: revisar esto
                        .HasFilter("[Deleted] = 0")
                        .HasDatabaseName("UNIQUE_Doctor_Time");
 

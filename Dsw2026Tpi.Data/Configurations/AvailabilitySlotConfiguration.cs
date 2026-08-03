@@ -30,7 +30,7 @@ namespace Dsw2026Tpi.Data.Configurations
             builder.Property(x => x.RowVersion).IsRowVersion();
 
             builder.HasIndex(x => new { x.AvailabilityRuleId, x.SlotDate, x.StartTime })
-                   .IsUnique()
+                   .IsUnique()// TODO: revisar todo
                    .HasDatabaseName("UNIQUE_Rule_DateTime");
 
             builder.HasIndex(x => new { x.DoctorId, x.SlotDate, x.StartTime }) 

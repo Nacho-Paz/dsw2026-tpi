@@ -27,3 +27,5 @@ public record DoctorModel
 
     public record AvailabilityResponse(Guid Id, string Day, string StartTime, string EndTime);
 }
+
+//TODO: BORRAR VALIDACIONES 
