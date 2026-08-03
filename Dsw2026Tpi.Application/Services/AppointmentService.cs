@@ -19,6 +19,16 @@ namespace Dsw2026Tpi.Application.Services
         }
         public async Task CreateAppointmentAsync(AppointmentModel.Request request)
         {
+            if (request.Patient.Dni.ToString().Length < 7 || request.Patient.Dni.ToString().Length > 10)
+            {
+                throw new ValidationException("El DNI debe tener entre 7 y 10 dígitos.", "INVALID_DNI");
+            }
+
+            if (request.Reason.Length < 5)
+            {
+                throw new ValidationException("El motivo debe tener al menos 5 caracteres.", "INVALID_REASON");
+            }
+
             var slot = await _persistence.First<AvailabilitySlot>(
                 s => s.Id == request.AvailabilityId && s.AvailabilityRule.DoctorId == request.DoctorId,
                 "AvailabilityRule"
