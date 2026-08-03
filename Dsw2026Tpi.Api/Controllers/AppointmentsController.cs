@@ -34,7 +34,7 @@ namespace Dsw2026Tpi.Api.Controllers
         {
             await _appointmentService.CancelAppointmentAsync(id);
 
-            return Ok("Ok");
+            return Ok("ok");
         }
 
         [HttpGet("patient")]
@@ -45,5 +45,28 @@ namespace Dsw2026Tpi.Api.Controllers
 
             return Ok(appointments);
         }
+
+        [HttpGet]
+        [Authorize(Roles = "ADMINISTRADOR")]
+        public async Task<IActionResult> GetByDate([FromQuery] string date)
+        {
+            var result = await _appointmentService.GetAppointmentsByDateAsync(date);
+            return Ok(result);
+        }
+
+        [HttpGet("search")]
+        [Authorize(Roles = "ADMINISTRADOR")]
+        public async Task<IActionResult> Search(
+            [FromQuery] int pageSize,
+            [FromQuery] int pageIndex,
+            [FromQuery] Guid? specialtyId,
+            [FromQuery] Guid? doctorId,
+            [FromQuery] long? dni,
+            [FromQuery] string date)
+        {
+            var result = await _appointmentService.SearchAppointmentsAsync(pageSize, pageIndex, specialtyId, doctorId, dni, date);
+            return Ok(result);
+        }
+
     }
 }

@@ -27,6 +27,8 @@ namespace Dsw2026Tpi.Data.Configurations
 
             builder.Property(x => x.Deleted).HasDefaultValue(false);
 
+            builder.Property(x => x.RowVersion).IsRowVersion();
+
             builder.HasIndex(x => new { x.AvailabilityRuleId, x.SlotDate, x.StartTime })
                    .IsUnique()
                    .HasDatabaseName("UNIQUE_Rule_DateTime");
