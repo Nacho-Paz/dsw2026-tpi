@@ -62,7 +62,9 @@ namespace Dsw2026Tpi.Application.Services
                   && r.Year == now.Year
                   && !r.Deleted,
                 "Slots");
-          
+
+            var preservedSlots = new HashSet<(DateTime Date, TimeSpan Time)>();
+
             if (rulesToDelete != null && rulesToDelete.Any())
             {
                 foreach (var rule in rulesToDelete)
@@ -74,7 +76,7 @@ namespace Dsw2026Tpi.Application.Services
                         {
                             if (slot.Status == "BOOKED")
                             {
-                               
+                                preservedSlots.Add((slot.SlotDate.Date, slot.StartTime));
                             }
                             else
                             {
@@ -87,7 +89,7 @@ namespace Dsw2026Tpi.Application.Services
                 }
             }
 
-            var newRules = await GenerateRulesAndSlots(request, now.Month, now.Year);
+            var newRules = await GenerateRulesAndSlots(request, now.Month, now.Year, preservedSlots);
 
             foreach (var rule in newRules)
             {
@@ -95,7 +97,7 @@ namespace Dsw2026Tpi.Application.Services
             } return newRules;
         }
 
-        private async Task<List<AvailabilityRule>> GenerateRulesAndSlots(AvailabilityModel.Request request, int month, int year)
+        private async Task<List<AvailabilityRule>> GenerateRulesAndSlots(AvailabilityModel.Request request, int month, int year, HashSet<(DateTime Date, TimeSpan Time)> preservedSlots = null)
         {
             var groupedDays = request.Days.GroupBy(d => d.Day.Trim().ToUpper());
             foreach (var group in groupedDays)
@@ -154,15 +156,20 @@ namespace Dsw2026Tpi.Application.Services
 
                         while (currentSlotStart + duracionTurno <= endTime)
                         {
-                            rule.Slots.Add(new AvailabilitySlot
-                            {
-                                SlotDate = currentDate,
-                                StartTime = currentSlotStart,
-                                EndTime = currentSlotStart + duracionTurno,
-                                Status = "AVAILABLE",
-                                Deleted = false
-                            });
+                            if (preservedSlots == null || !preservedSlots.Contains((currentDate.Date, currentSlotStart)))
 
+                            {
+                                rule.Slots.Add(new AvailabilitySlot
+                                {
+                                    SlotDate = currentDate,
+                                    StartTime = currentSlotStart,
+                                    EndTime = currentSlotStart + duracionTurno,
+                                    Status = "AVAILABLE",
+                                    Deleted = false,
+                                    DoctorId = request.DoctorId
+                                });
+                            }
+                              
                             currentSlotStart = currentSlotStart + duracionTurno;
                         }
                     }
