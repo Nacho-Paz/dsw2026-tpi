@@ -17,7 +17,7 @@ namespace Dsw2026Tpi.Application.Services
         {
             _persistence = persistence;
         }
-        public async Task CreateAppointmentAsync(AppointmentModel.Request request)
+        public async Task<AppointmentModel.Response> CreateAppointmentAsync(AppointmentModel.Request request)
         {
             if (request.Patient.Dni.ToString().Length < 7 || request.Patient.Dni.ToString().Length > 10)
             {
@@ -30,7 +30,7 @@ namespace Dsw2026Tpi.Application.Services
             }
 
             var slot = await _persistence.First<AvailabilitySlot>(
-                s => s.Id == request.AvailabilityId && s.AvailabilityRule.DoctorId == request.DoctorId,
+                s => s.Id == request.AvailabilitySlotId && s.AvailabilityRule.DoctorId == request.DoctorId,
                 "AvailabilityRule"
             );
 
@@ -57,7 +57,7 @@ namespace Dsw2026Tpi.Application.Services
             var appointment = new Appointment
             {
                 AvailabilitySlotId = slot.Id,
-                PatientId = request.PatientId,
+                PatientId = patient.Id,
                 Reason = request.Reason,
                 Status = "BOOKED"
             };
@@ -66,13 +66,29 @@ namespace Dsw2026Tpi.Application.Services
 
             await _persistence.Add(appointment);
             await _persistence.Update(slot);
+
+            return new AppointmentModel.Response(
+                appointment.Id,
+                appointment.AvailabilitySlotId,
+                appointment.PatientId,
+                appointment.Reason,
+                appointment.Status,
+                DateTime.Now
+            );
         }
 
-        public async Task<object> GetActiveAppointmentsByPatientAsync(long //tiene que recibir dni )
+        public async Task<object> GetActiveAppointmentsByPatientAsync(long dni)
         {
-           /* var activeAppointments = await _persistence.GetFiltered<Appointment>(
-            a => a.PatientId == patientId && a.Status == "BOOKED",
-            "AvailabilitySlot.AvailabilityRule.Doctor" ); */ 
+            var activeAppointments = await _persistence.GetFiltered<Appointment>(
+                a => a.Patient.Dni == dni.ToString() && a.Status == "BOOKED",
+                "AvailabilitySlot.AvailabilityRule.Doctor,Patient");
+
+            var patient = await _persistence.First<Patient>(p => p.Dni == dni.ToString());
+
+            if (patient == null)
+            {
+                throw new EntityNotFoundException("Paciente");
+            }
 
             if (activeAppointments == null || !activeAppointments.Any())
             {

@@ -21,8 +21,8 @@ namespace Dsw2026Tpi.Api.Controllers
         [Authorize(Roles = "PACIENTE")]
         public async Task<IActionResult> Create([FromBody] AppointmentModel.Request request)
         {
-            await _appointmentService.CreateAppointmentAsync(request);
-            return Created(string.Empty, new AppointmentModel.Response("Turno reservado con éxito."));
+            var appointmentCreated = await _appointmentService.CreateAppointmentAsync(request);
+            return Created(string.Empty, appointmentCreated);
         }
 
         [HttpDelete("{id}")]
@@ -31,14 +31,14 @@ namespace Dsw2026Tpi.Api.Controllers
         {
             await _appointmentService.CancelAppointmentAsync(id);
 
-            return Ok(new AppointmentModel.Response("Turno cancelado correctamente."));
+            return Ok("Ok");
         }
 
         [HttpGet("patient")]
         [Authorize(Roles = "PACIENTE, ADMINISTRADOR")]
-        public async Task<IActionResult> GetPatientAppointments([FromQuery] Guid patientId)
+        public async Task<IActionResult> GetPatientAppointments([FromQuery] long dni)
         {
-            var appointments = await _appointmentService.GetActiveAppointmentsByPatientAsync(patientId);
+            var appointments = await _appointmentService.GetActiveAppointmentsByPatientAsync(dni);
 
             return Ok(appointments);
         }
