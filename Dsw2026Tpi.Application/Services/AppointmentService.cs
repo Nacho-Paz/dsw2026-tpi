@@ -10,7 +10,7 @@ using System.Text;
 
 namespace Dsw2026Tpi.Application.Services
 {
-    public class AppointmentService : IAppointmentService // revisar error
+    public class AppointmentService : IAppointmentService 
     {
         private readonly IPersistence _persistence;
         public AppointmentService(IPersistence persistence)
@@ -127,6 +127,82 @@ namespace Dsw2026Tpi.Application.Services
 
             await _persistence.Update(appointment);
             await _persistence.Update(appointment.AvailabilitySlot);
+        }
+
+        public async Task<object> GetAppointmentsByDateAsync(string date)
+        {
+            if (!DateTime.TryParse(date, out DateTime parsedDate))
+            {
+                throw new ValidationException("Formato de fecha inválido. Use YYYY-MM-DD.", "INVALID_DATE");
+            }
+
+            var appointments = await _persistence.GetFiltered<Appointment>(
+                a => a.AvailabilitySlot.SlotDate.Date == parsedDate.Date,
+                "AvailabilitySlot.AvailabilityRule.Doctor,Patient"
+            );
+
+            appointments ??= new List<Appointment>();
+
+            return appointments.Select(a => new
+            {
+                AppointmentId = a.Id,
+                Status = a.Status,
+                PatientDni = a.Patient.Dni ?? "",
+                Time = a.AvailabilitySlot?.StartTime ?? TimeSpan.Zero
+            }).ToList();
+        }
+
+        public async Task<Pagination<AppointmentModel.SearchItem>> SearchAppointmentsAsync(int pageSize, int pageIndex, Guid? specialtyId, Guid? doctorId, long? dni, string date)
+        {
+            DateTime? parsedDate = null;
+            if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out DateTime tempDate))
+            {
+                parsedDate = tempDate.Date;
+            }
+
+            var allAppointments = await _persistence.GetFiltered<Appointment>(
+                a => (!parsedDate.HasValue || a.AvailabilitySlot.SlotDate.Date == parsedDate.Value) &&
+                     (!doctorId.HasValue || a.AvailabilitySlot.AvailabilityRule.DoctorId == doctorId.Value) &&
+                     (!dni.HasValue || a.Patient.Dni == dni.Value.ToString()),
+                "AvailabilitySlot.AvailabilityRule.Doctor.Specialty,Patient"
+            );
+
+            allAppointments ??= new List<Appointment>();
+            if (!allAppointments.Any())
+            {
+                return Pagination<AppointmentModel.SearchItem>.Empty;
+            }
+
+            if (specialtyId.HasValue)
+            {
+                allAppointments = allAppointments.Where(a =>
+                    a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Speciality?.Id == specialtyId.Value).ToList();
+            }
+
+            int totalRecords = allAppointments.Count();
+            var pagedAppointments = allAppointments
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+            var data = pagedAppointments.Select(a => new AppointmentModel.SearchItem(
+                AppointmentsId: a.Id,
+                AppointmentsStatus: a.Status,
+                Patient: new AppointmentModel.PatientInfo(
+                    Dni: long.Parse(a.Patient?.Dni ?? "0"),
+                    FullName: a.Patient?.Nombre ?? ""),
+                Doctor: new AppointmentModel.DoctorInfo(
+                    DoctorId: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Id ?? Guid.Empty,
+                    Name: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Name ?? "",
+                    Specialty: new AppointmentModel.SpecialtyInfo(
+                        SpecialtyId: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Speciality?.Id ?? Guid.Empty,
+                        Name: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Speciality?.Name ?? "")
+                                                        )));
+
+            return new Pagination<AppointmentModel.SearchItem>(
+                pageSize,
+                pageIndex,
+                totalRecords,
+                data);
         }
     }
 }

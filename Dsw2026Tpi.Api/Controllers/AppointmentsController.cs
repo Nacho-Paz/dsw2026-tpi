@@ -2,6 +2,7 @@
 using Dsw2026Tpi.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using static Dsw2026Tpi.Application.Dtos.AppointmentModel;
 
 namespace Dsw2026Tpi.Api.Controllers
@@ -9,6 +10,7 @@ namespace Dsw2026Tpi.Api.Controllers
     [ApiController]
     [Route("api/appointments")]
     [Authorize]
+    [EnableRateLimiting("GeneralPolicy")]
     public class AppointmentsController : ControllerBase
     { 
         private readonly IAppointmentService _appointmentService;
@@ -19,6 +21,7 @@ namespace Dsw2026Tpi.Api.Controllers
 
         [HttpPost]
         [Authorize(Roles = "PACIENTE")]
+        [EnableRateLimiting("PatientBookingPolicy")]
         public async Task<IActionResult> Create([FromBody] AppointmentModel.Request request)
         {
             var appointmentCreated = await _appointmentService.CreateAppointmentAsync(request);
