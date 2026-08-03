@@ -1,15 +1,11 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
-using Dsw2026Tpi.Data;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -23,22 +19,14 @@ namespace Dsw2026Tpi.Application.Services
             _persistence = persistence;
         }
 
-<<<<<<< HEAD
-
-        public async Task<List<AvailabilityRule>> CreateAvailabilitiesAsync(AvailabilityModel.Request request)
-        {
-
-            // existe el medico en db?
-=======
         public async Task<List<AvailabilityRule>> CreateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
             var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId && d.IsActive);
-            
-            if (doctor == null) 
-            { 
-                throw new EntityNotFoundException(nameof(Doctor)); 
+
+            if (doctor == null)
+            {
+                throw new EntityNotFoundException(nameof(Doctor));
             }
->>>>>>> modulo/disponibilidad
 
             var now = DateTime.Now;
             var existingRule = await _persistence.First<AvailabilityRule>(
@@ -46,47 +34,31 @@ namespace Dsw2026Tpi.Application.Services
                   && r.Month == now.Month
                   && r.Year == now.Year
                   && !r.Deleted);
-            
+
 
             if (existingRule != null)
             {
                 throw new ConflictException("AVAILABILITY_CONFLICT", "El médico ya tiene disponibilidades asignadas para este mes.");
             }
 
-<<<<<<< HEAD
-            /*
-            if ()
-                //ese dia no es feriado
-            { 
-                //se puede agregar disponibilidad
-            
-            }*/
-
-
-            var rules = GenerateRulesAndSlots(request, now.Month, now.Year);
-=======
             var rules = await GenerateRulesAndSlots(request, now.Month, now.Year);
->>>>>>> modulo/disponibilidad
 
             foreach (var rule in rules)
             {
                 await _persistence.Add(rule);
-<<<<<<< HEAD
-            }
-
-            foreach (var rule in rules)
-            {
-                await _persistence.Add(rule);
-            }
-
-            return rules;
-=======
             } return rules;
->>>>>>> modulo/disponibilidad
         }
+            
 
         public async Task<List<AvailabilityRule>> UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
+            var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId && d.IsActive);
+
+            if (doctor == null)
+            {
+                throw new EntityNotFoundException(nameof(Doctor));
+            }
+
             var now = DateTime.Now;
 
             var rulesToDelete = await _persistence.GetFiltered<AvailabilityRule>(
@@ -96,14 +68,7 @@ namespace Dsw2026Tpi.Application.Services
                   && !r.Deleted,
                 "Slots");
 
-<<<<<<< HEAD
-
-            // existe el medico en db?
-
-            // chequear si el slot a borrar tiene una cita y booked, arrojar excepcion 
-=======
             var preservedSlots = new HashSet<(DateTime Date, TimeSpan Time)>();
->>>>>>> modulo/disponibilidad
 
             if (rulesToDelete != null && rulesToDelete.Any())
             {
@@ -134,27 +99,13 @@ namespace Dsw2026Tpi.Application.Services
             foreach (var rule in newRules)
             {
                 await _persistence.Add(rule);
-<<<<<<< HEAD
-            }
-
-            foreach (var rule in newRules)
-            {
-                await _persistence.Add(rule);
-            }
-
-            return newRules;
-=======
-            } return newRules;
->>>>>>> modulo/disponibilidad
+            }return newRules;
         }
 
         private async Task<List<AvailabilityRule>> GenerateRulesAndSlots(AvailabilityModel.Request request, int month, int year, HashSet<(DateTime Date, TimeSpan Time)> preservedSlots = null)
         {
             var groupedDays = request.Days.GroupBy(d => d.Day.Trim().ToUpper());
-<<<<<<< HEAD
-
-=======
->>>>>>> modulo/disponibilidad
+           
             foreach (var group in groupedDays)
             {
                 var sortedRanges = group.Select(d => new
@@ -162,19 +113,13 @@ namespace Dsw2026Tpi.Application.Services
                     StartTime = TimeSpan.Parse(d.StartTime),
                     EndTime = TimeSpan.Parse(d.EndTime)
                 }).OrderBy(r => r.StartTime).ToList();
-<<<<<<< HEAD
 
-=======
->>>>>>> modulo/disponibilidad
+
                 for (int i = 0; i < sortedRanges.Count - 1; i++)
                 {
                     if (sortedRanges[i + 1].StartTime < sortedRanges[i].EndTime)
                     {
-<<<<<<< HEAD
                         throw new ConflictException("OVERLAPPING_TIMES", $"Se detectó un solapamiento en los horarios enviados para el día {group.Key}.");
-=======
-                        throw new ConflictException("OVERLAPPING_TIMES", $"Se detectó un solapamiento en los horarios enviados para el día { group.Key }.");
->>>>>>> modulo/disponibilidad
                     }
                 }
             }
