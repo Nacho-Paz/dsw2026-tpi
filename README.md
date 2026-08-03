@@ -1,16 +1,13 @@
 # Trabajo Práctico Integrador
 ## Desarrollo de Software 2026
 
-Acceso al [documento](https://frtutneduar-my.sharepoint.com/:b:/g/personal/franciscovicente_doc_frt_utn_edu_ar/IQD-5kaAARqnT5eL7EnPMCPgAfmPoH09HkfmQQYH8pMgqdA?e=i6C3fT)
+### 👤 Integrantes
+| Legajo | Nombre |
+| ------------- | ------ |  
+| 58096   | Coronel Arrieta, Ana Milena |
+| 57892   | Luna Acosta, Lourdes Valentina |
+| 57828   | Paz, Ignacio Javier | 
+| 58350   | Zambrano, Agustina Nahir |
 
-Instrucciones:
-* Realizar una bifurcación por grupo
-* Crear una rama de larga duración `development`
-* Completar `README` con los integrantes en cada bifurcación
-* Todos los integrantes deben participar con confirmaciones en el repositorio bifurcado
-* Organizar el trabajo en equipo y crear ramas temporales
-* Actualizar la rama de larga duración mediante **pull-requests**
-* No eliminar las ramas temporales
-* Tener en cuenta que ya se realizaron las migraciones de Identity, crear nuevas de ser necesario
-* Para más detalles, revisar la grabación de la última clase
-* El endpoint de registración de usuarios administradores está disponible para crear usuarios y poder hacer pruebas, a futuro se eliminará
+
+

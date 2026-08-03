@@ -36,7 +36,9 @@ public static class SecurityConfigurationExtensions
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = issuer,
                     ValidAudience = audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(key)
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+
+                    ClockSkew = TimeSpan.Zero
                 };
             });
         services.AddAuthorizationBuilder()
@@ -44,6 +46,10 @@ public static class SecurityConfigurationExtensions
                 policy.RequireRole(Roles.Administrator))
             .AddPolicy(Policies.PatientPolicy, policy =>
                 policy.RequireRole(Roles.Patient));
+        //.SetFallbackPolicy(new AuthorizationPolicyBuilder()
+        //.RequireAuthenticatedUser()
+        //.Build());
+        //TODO: Agregarlo al último ya que agrega seguridad a todos los endpoints menos los AllowAnonymous
         return services;
     }
 
@@ -89,11 +95,18 @@ public static class SecurityConfigurationExtensions
         {
             options.Password = new PasswordOptions
             {
-                RequiredLength = 6,
+                RequiredLength = 8,
                 RequireLowercase = true,
                 RequireUppercase = true,
-                RequireDigit = true
+                RequireDigit = true,
+                RequireNonAlphanumeric = true
             };
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            options.Lockout.AllowedForNewUsers = true;
+
+            options.User.RequireUniqueEmail = true;
+            options.SignIn.RequireConfirmedAccount = false;
 
         }).AddRoles<IdentityRole>()
           .AddEntityFrameworkStores<AuthenticationDbContext>()
