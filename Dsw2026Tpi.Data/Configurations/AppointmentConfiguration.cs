@@ -19,7 +19,7 @@ namespace Dsw2026Tpi.Data.Configurations
             builder.Property(x => x.PatientId).IsRequired();
 
             builder.Property(x => x.Reason)
-                   .HasMaxLength(200)
+                   .HasMaxLength(300)
                    .IsRequired();
 
             builder.Property(x => x.Status)
