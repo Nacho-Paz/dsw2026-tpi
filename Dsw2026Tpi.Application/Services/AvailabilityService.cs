@@ -7,8 +7,10 @@ using Dsw2026Tpi.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
-using System.Linq;
+using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Dsw2026Tpi.Application.Services
@@ -21,11 +23,22 @@ namespace Dsw2026Tpi.Application.Services
             _persistence = persistence;
         }
 
+<<<<<<< HEAD
 
         public async Task<List<AvailabilityRule>> CreateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
 
             // existe el medico en db?
+=======
+        public async Task<List<AvailabilityRule>> CreateAvailabilitiesAsync(AvailabilityModel.Request request)
+        {
+            var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId && d.IsActive);
+            
+            if (doctor == null) 
+            { 
+                throw new EntityNotFoundException(nameof(Doctor)); 
+            }
+>>>>>>> modulo/disponibilidad
 
             var now = DateTime.Now;
             var existingRule = await _persistence.First<AvailabilityRule>(
@@ -40,6 +53,7 @@ namespace Dsw2026Tpi.Application.Services
                 throw new ConflictException("AVAILABILITY_CONFLICT", "El médico ya tiene disponibilidades asignadas para este mes.");
             }
 
+<<<<<<< HEAD
             /*
             if ()
                 //ese dia no es feriado
@@ -50,10 +64,14 @@ namespace Dsw2026Tpi.Application.Services
 
 
             var rules = GenerateRulesAndSlots(request, now.Month, now.Year);
+=======
+            var rules = await GenerateRulesAndSlots(request, now.Month, now.Year);
+>>>>>>> modulo/disponibilidad
 
             foreach (var rule in rules)
             {
                 await _persistence.Add(rule);
+<<<<<<< HEAD
             }
 
             foreach (var rule in rules)
@@ -62,6 +80,9 @@ namespace Dsw2026Tpi.Application.Services
             }
 
             return rules;
+=======
+            } return rules;
+>>>>>>> modulo/disponibilidad
         }
 
         public async Task<List<AvailabilityRule>> UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
@@ -75,10 +96,14 @@ namespace Dsw2026Tpi.Application.Services
                   && !r.Deleted,
                 "Slots");
 
+<<<<<<< HEAD
 
             // existe el medico en db?
 
             // chequear si el slot a borrar tiene una cita y booked, arrojar excepcion 
+=======
+            var preservedSlots = new HashSet<(DateTime Date, TimeSpan Time)>();
+>>>>>>> modulo/disponibilidad
 
             if (rulesToDelete != null && rulesToDelete.Any())
             {
@@ -89,7 +114,14 @@ namespace Dsw2026Tpi.Application.Services
                     {
                         foreach (var slot in rule.Slots)
                         {
-                            slot.Deleted = true;
+                            if (slot.Status == "BOOKED")
+                            {
+                                preservedSlots.Add((slot.SlotDate.Date, slot.StartTime));
+                            }
+                            else
+                            {
+                                slot.Deleted = true;
+                            }
                         }
                     }
 
@@ -97,11 +129,12 @@ namespace Dsw2026Tpi.Application.Services
                 }
             }
 
-            var newRules = GenerateRulesAndSlots(request, now.Month, now.Year);
+            var newRules = await GenerateRulesAndSlots(request, now.Month, now.Year, preservedSlots);
 
             foreach (var rule in newRules)
             {
                 await _persistence.Add(rule);
+<<<<<<< HEAD
             }
 
             foreach (var rule in newRules)
@@ -110,12 +143,18 @@ namespace Dsw2026Tpi.Application.Services
             }
 
             return newRules;
+=======
+            } return newRules;
+>>>>>>> modulo/disponibilidad
         }
 
-        private List<AvailabilityRule> GenerateRulesAndSlots(AvailabilityModel.Request request, int month, int year)
+        private async Task<List<AvailabilityRule>> GenerateRulesAndSlots(AvailabilityModel.Request request, int month, int year, HashSet<(DateTime Date, TimeSpan Time)> preservedSlots = null)
         {
             var groupedDays = request.Days.GroupBy(d => d.Day.Trim().ToUpper());
+<<<<<<< HEAD
 
+=======
+>>>>>>> modulo/disponibilidad
             foreach (var group in groupedDays)
             {
                 var sortedRanges = group.Select(d => new
@@ -123,12 +162,19 @@ namespace Dsw2026Tpi.Application.Services
                     StartTime = TimeSpan.Parse(d.StartTime),
                     EndTime = TimeSpan.Parse(d.EndTime)
                 }).OrderBy(r => r.StartTime).ToList();
+<<<<<<< HEAD
 
+=======
+>>>>>>> modulo/disponibilidad
                 for (int i = 0; i < sortedRanges.Count - 1; i++)
                 {
                     if (sortedRanges[i + 1].StartTime < sortedRanges[i].EndTime)
                     {
+<<<<<<< HEAD
                         throw new ConflictException("OVERLAPPING_TIMES", $"Se detectó un solapamiento en los horarios enviados para el día {group.Key}.");
+=======
+                        throw new ConflictException("OVERLAPPING_TIMES", $"Se detectó un solapamiento en los horarios enviados para el día { group.Key }.");
+>>>>>>> modulo/disponibilidad
                     }
                 }
             }
@@ -136,6 +182,8 @@ namespace Dsw2026Tpi.Application.Services
             var rules = new List<AvailabilityRule>();
             var daysInMonth = DateTime.DaysInMonth(year, month);
             var today = DateTime.Now.Date;
+           
+            var holidays = await LoadHolidaysAsync();
 
             foreach (var dayRule in request.Days)
             {
@@ -164,22 +212,27 @@ namespace Dsw2026Tpi.Application.Services
                 {
                     var currentDate = new DateTime(year, month, day);
 
-                    if (currentDate.DayOfWeek == targetDayOfWeek && currentDate >= today)
+                    if (currentDate.DayOfWeek == targetDayOfWeek && currentDate >= today && !holidays.Contains(currentDate.Date))
                     {
                         var currentSlotStart = startTime;
                         TimeSpan duracionTurno = TimeSpan.FromMinutes(30);
 
                         while (currentSlotStart + duracionTurno <= endTime)
                         {
-                            rule.Slots.Add(new AvailabilitySlot
-                            {
-                                SlotDate = currentDate,
-                                StartTime = currentSlotStart,
-                                EndTime = currentSlotStart + duracionTurno,
-                                Status = "AVAILABLE",
-                                Deleted = false
-                            });
+                            if (preservedSlots == null || !preservedSlots.Contains((currentDate.Date, currentSlotStart)))
 
+                            {
+                                rule.Slots.Add(new AvailabilitySlot
+                                {
+                                    SlotDate = currentDate,
+                                    StartTime = currentSlotStart,
+                                    EndTime = currentSlotStart + duracionTurno,
+                                    Status = "AVAILABLE",
+                                    Deleted = false,
+                                    DoctorId = request.DoctorId
+                                });
+                            }
+                              
                             currentSlotStart = currentSlotStart + duracionTurno;
                         }
                     }
@@ -220,5 +273,39 @@ namespace Dsw2026Tpi.Application.Services
                     throw new ConflictException("INVALID_DAY", "El día ingresado no es válido.");
             }
         }
+
+        private async Task<HashSet<DateTime>> LoadHolidaysAsync()
+        {
+            var holidays = new HashSet<DateTime>();
+            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "feriados.json");
+
+            if (!File.Exists(filePath))
+            {
+                return holidays;
+            }
+
+            try
+            {
+                var json = await File.ReadAllTextAsync(filePath);
+                var loadedHolidays = JsonSerializer.Deserialize<List<DateTime>>(json);
+
+                if (loadedHolidays != null)
+                {
+                    foreach (var date in loadedHolidays)
+                    {
+                        holidays.Add(date.Date);
+                    }
+                }
+            }
+            
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return holidays;
+        }
+
+
     }
 }

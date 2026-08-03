@@ -35,8 +35,7 @@ namespace Dsw2026Tpi.Data.Configurations
 
             builder.HasOne(x => x.AvailabilitySlot)
                    .WithOne(x => x.Appointment)
-                   .HasForeignKey<Appointment>(x => x.AvailabilitySlotId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                   .HasForeignKey<Appointment>(x => x.AvailabilitySlotId);
         }
 
     }
