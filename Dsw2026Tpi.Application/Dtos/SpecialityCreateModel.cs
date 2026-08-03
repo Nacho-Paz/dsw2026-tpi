@@ -16,4 +16,3 @@ namespace Dsw2026Tpi.Application.Dtos
         public String Description { get; set; } = string.Empty;
     }
 }
-
