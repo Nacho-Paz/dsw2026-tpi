@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Dsw2026Tpi.Data.Configurations
 {
-    internal class AvailabilitySlotConfiguration : IEntityTypeConfiguration<AvailabilitySlot>
+    public class AvailabilitySlotConfiguration : IEntityTypeConfiguration<AvailabilitySlot>
     {
         public void Configure(EntityTypeBuilder<AvailabilitySlot> builder)
         {
@@ -30,6 +30,11 @@ namespace Dsw2026Tpi.Data.Configurations
             builder.HasIndex(x => new { x.AvailabilityRuleId, x.SlotDate, x.StartTime })
                    .IsUnique()
                    .HasDatabaseName("UNIQUE_Rule_DateTime");
+
+            builder.HasIndex(x => new { x.DoctorId, x.SlotDate, x.StartTime }) 
+                .IsUnique()
+                .HasDatabaseName("UNIQUE_Doctor_Slot_Time");
+
             builder.HasOne(x => x.AvailabilityRule)
                    .WithMany(x => x.Slots)
                    .HasForeignKey(x => x.AvailabilityRuleId);
