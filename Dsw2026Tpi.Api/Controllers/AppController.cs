@@ -8,5 +8,6 @@ namespace Dsw2026Tpi.Api.Controllers;
 [ApiController]
 public abstract class AppController : ControllerBase
 {
+    //TODO: Las anotaciones que lanzan errores son para swagger
 }
 
