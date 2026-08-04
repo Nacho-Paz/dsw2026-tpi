@@ -1,11 +1,7 @@
-﻿using System.Linq;
-using Dsw2026Tpi.Application.Dtos;
+﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.Domain.Interfaces;
 using Dsw2026Tpi.Domain.Entities;
-using System.Threading.Tasks;
-using Dsw2026Tpi.Data;
-using System;
 
 
 using Dsw2026Tpi.CrossCutting.Exceptions;
