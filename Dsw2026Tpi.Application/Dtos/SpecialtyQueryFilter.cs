@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Dsw2026Tpi.Application.Dtos
 {
-    public class SpecialityQueryFilter
+    public class SpecialtyQueryFilter
     {
         public int PageSize {  get; set; }
         public int PageIndex { get; set; }
@@ -14,4 +11,3 @@ namespace Dsw2026Tpi.Application.Dtos
 
     }
 }
-//TODO: BORRAR VALIDACIONES 
