@@ -23,7 +23,7 @@ namespace Dsw2026Tpi.Application.Services
         public async Task<AppointmentModel.Response> CreateAppointmentAsync(AppointmentModel.Request request)
         {
             string dniString = request.Patient.Dni.ToString();
-            if (dniString.Length < 7 || dniString.Length > 10) //TODO: Dni entre 7 y 8
+            if (dniString.Length < 7 || dniString.Length > 10) 
             {
                 throw new ValidationException("El DNI debe tener entre 7 y 10 dígitos.", "INVALID_DNI");
             }
@@ -31,7 +31,6 @@ namespace Dsw2026Tpi.Application.Services
                 request.DoctorId, request.AvailabilitySlotId);
 
             ValidateRequest(request);
-            //string dniString = request.Patient.Dni.ToString();
 
             var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId);
 
@@ -66,9 +65,12 @@ namespace Dsw2026Tpi.Application.Services
 
             var patient = await _persistence.First<Patient>(p => p.Dni == dniString);
             if (patient == null)
-
+            {
                 _logger.LogWarning("Paciente con DNI {PatientDni} no encontrado al intentar reservar el slot {SlotId}.", dniString, slot.Id);
-            throw new ConflictException("PATIENT_NOT_FOUND", "El paciente no existe en el sistema.");
+                throw new ConflictException("PATIENT_NOT_FOUND", "El paciente no existe en el sistema.");
+            }
+
+               
 
             var appointment = new Appointment
             {
