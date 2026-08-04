@@ -177,7 +177,7 @@ namespace Dsw2026Tpi.Application.Services
                 if (!TimeSpan.TryParse(dayRule.StartTime, out var startTime))
                     {
 
-                        _logger.LogWarning("Validación fallida: El horario de inicio proporcionado tiene un formato inválido y no pudo ser procesado.")
+                    _logger.LogWarning("Validación fallida: El horario de inicio proporcionado tiene un formato inválido y no pudo ser procesado.");
                          throw new ConflictException( "INVALID_TIME_FORMAT", $"El horario de inicio del día {dayRule.Day} tiene un formato inválido.");
                     }
 

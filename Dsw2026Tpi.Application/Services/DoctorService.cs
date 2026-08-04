@@ -44,7 +44,7 @@ public class DoctorService : IDoctorService
         if (doctor == null)
         {
             _logger.LogWarning("Médico con ID {DoctorId} no encontrado para consultar disponibilidades.", doctorId);
-            throw new EntryPointNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
+            throw new EntityNotFoundException("Doctor");
         }
         var now= DateTime.Now;
         var rules = await _persistence.GetFiltered<AvailabilityRule>(
@@ -82,7 +82,7 @@ public class DoctorService : IDoctorService
         if (speciality == null)
         {
             _logger.LogWarning("Especialidad con ID {SpecialityId} no encontrada al crear médico.", model.SpecialityId);
-            throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
+            throw new EntityNotFoundException("Doctor");
         }
 
         var newDoctor = new Doctor(model.Name, model.LicenseNumber, speciality);
@@ -107,7 +107,7 @@ public class DoctorService : IDoctorService
         {
             _logger.LogWarning("No se encontró el médico con ID {DoctorId} para actualizar.", id);
 
-            throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
+            throw new EntityNotFoundException("Doctor");
         }
 
         if (string.IsNullOrWhiteSpace(model.Name))
@@ -125,7 +125,7 @@ public class DoctorService : IDoctorService
         if (speciality == null)
         {
             _logger.LogWarning("La especialidad con ID {SpecialityId} no fue encontrada al intentar actualizar el médico {DoctorId}.", model.SpecialityId, id);
-            throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
+            throw new EntityNotFoundException("Doctor");
         }
 
 
@@ -148,7 +148,7 @@ public class DoctorService : IDoctorService
         if (existingEntity == null)
         {
             _logger.LogWarning("No se encontró el médico activo con ID {DoctorId} para eliminar.", id);
-            throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
+            throw new EntityNotFoundException("Doctor");
         }
 
         existingEntity.Deactivate();
