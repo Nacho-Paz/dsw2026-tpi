@@ -3,9 +3,6 @@ using Dsw2026Tpi.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace Dsw2026Tpi.Api.Controllers
 {
@@ -25,36 +22,14 @@ namespace Dsw2026Tpi.Api.Controllers
         public async Task<IActionResult> CreateAvailabilities([FromBody] AvailabilityModel.Request request)
         {
             var result = await _availabilityService.CreateAvailabilitiesAsync(request);
-            var response = MapToDto(result);
-            return Ok(response);
+            return Ok(result);
         }
 
         [HttpPut]
         public async Task<IActionResult> UpdateAvailabilities([FromBody] AvailabilityModel.Request request)
         {
             var result = await _availabilityService.UpdateAvailabilitiesAsync(request);
-            var response = MapToDto(result);
-            return Ok(response);
-        }
-
-        private List<AvailabilityModel.RuleResponse> MapToDto(List<Domain.Entities.AvailabilityRule> rules)
-        {
-            return rules.Select(r => new AvailabilityModel.RuleResponse(
-                r.Id,
-                r.DoctorId,
-                r.Month,
-                r.Year,
-                r.DayOfWeek,
-                r.StartTime.ToString(@"hh\:mm"),
-                r.EndTime.ToString(@"hh\:mm"),
-                r.Slots?.Select(s => new AvailabilityModel.SlotResponse(
-                    s.Id,
-                    s.SlotDate.ToString("yyyy-MM-dd"),
-                    s.StartTime.ToString(@"hh\:mm"),
-                    s.EndTime.ToString(@"hh\:mm"),
-                    s.Status
-                )).ToList() ?? new List<AvailabilityModel.SlotResponse>()
-            )).ToList();
+            return Ok(result);
         }
     }
 }

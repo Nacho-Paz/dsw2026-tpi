@@ -5,13 +5,7 @@ using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Enum;
 using Dsw2026Tpi.Domain.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
-using static Dsw2026Tpi.Application.Dtos.AvailabilityModel;
 
 namespace Dsw2026Tpi.Application.Services
 {
@@ -23,7 +17,7 @@ namespace Dsw2026Tpi.Application.Services
             _persistence = persistence;
         }
 
-        public async Task<List<AvailabilityRule>> CreateAvailabilitiesAsync(AvailabilityModel.Request request)
+        public async Task<List<AvailabilityModel.RuleResponse>> CreateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
 
             ValidateRequest(request);
@@ -52,11 +46,12 @@ namespace Dsw2026Tpi.Application.Services
             foreach (var rule in rules)
             {
                 await _persistence.Add(rule);
-            } return rules;
+
+            } return MapToDto(rules);
         }
             
 
-        public async Task<List<AvailabilityRule>> UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
+        public async Task<List<AvailabilityModel.RuleResponse>> UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
             ValidateRequest(request);
 
@@ -108,7 +103,7 @@ namespace Dsw2026Tpi.Application.Services
             {
                 await _persistence.Add(rule);
 
-            }return newRules;
+            }return MapToDto(newRules);
         }
 
         private static void ValidateRequest(AvailabilityModel.Request request)
@@ -272,6 +267,25 @@ namespace Dsw2026Tpi.Application.Services
                 } return holidays;
         }
 
+        private List<AvailabilityModel.RuleResponse> MapToDto(List<Domain.Entities.AvailabilityRule> rules)
+        {
+            return rules.Select(r => new AvailabilityModel.RuleResponse(
+                r.Id,
+                r.DoctorId,
+                r.Month,
+                r.Year,
+                r.DayOfWeek.ToString(),
+                r.StartTime.ToString(@"hh\:mm"),
+                r.EndTime.ToString(@"hh\:mm"),
+                r.Slots?.Select(s => new AvailabilityModel.SlotResponse(
+                    s.Id,
+                    s.SlotDate.ToString("yyyy-MM-dd"),
+                    s.StartTime.ToString(@"hh\:mm"),
+                    s.EndTime.ToString(@"hh\:mm"),
+                    s.Status.ToString()
+                )).ToList() ?? new List<AvailabilityModel.SlotResponse>()
+            )).ToList();
+        }
 
     }
 }
