@@ -9,7 +9,7 @@ namespace Dsw2026Tpi.Application.Dtos
         public record Request(Guid DoctorId, Guid AvailabilitySlotId, PatientRequest Patient, string Reason);
         public record PatientRequest(long Dni);
         public record Response(Guid Id, Guid AvailabilitySlotId, Guid PatientId, string Reason, string Status, DateTime CreatedAt);
-        public record SearchItem(Guid AppointmentsId, string AppointmentsStatus, PatientInfo Patient, DoctorInfo Doctor);
+        public record SearchItem(Guid AppointmentId, string AppointmentStatus, PatientInfo Patient, DoctorInfo Doctor);
 
         public record PatientInfo(long Dni, string FullName);
 
@@ -19,4 +19,3 @@ namespace Dsw2026Tpi.Application.Dtos
 
     }
 }
-//TODO: REVISAR CON TPI 

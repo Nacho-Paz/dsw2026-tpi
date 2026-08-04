@@ -9,7 +9,7 @@ namespace Dsw2026Tpi.Domain.Entities
         public Guid DoctorId { get; set; }
         public int Month { get; set; }
         public int Year { get; set; }
-        public string DayOfWeek { get; set; }
+        public DayOfWeek DayOfWeek { get; set; }
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
         public bool Deleted { get; set; } = false; 

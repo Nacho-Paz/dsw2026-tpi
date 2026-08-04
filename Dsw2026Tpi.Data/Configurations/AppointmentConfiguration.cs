@@ -1,9 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Dsw2026Tpi.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Dsw2026Tpi.Domain.Status;
 
 namespace Dsw2026Tpi.Data.Configurations
 {
@@ -25,7 +23,7 @@ namespace Dsw2026Tpi.Data.Configurations
             builder.Property(x => x.Status)
                    .HasMaxLength(20)
                    .IsRequired()
-                   .HasDefaultValue("BOOKED"); // TODO:revisar Estados con enum
+                   .HasDefaultValue(AppointmentStatus.BOOKED); 
 
             builder.Property(x => x.CancelledAt).IsRequired(false);
             builder.Property(x => x.AttendedAt).IsRequired(false);
