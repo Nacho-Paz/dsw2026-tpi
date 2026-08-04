@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Dsw2026Tpi.Data.Configurations;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dsw2026Tpi.Data.Identity;
 
-public class AuthenticationDbContext: IdentityDbContext
+public class AuthenticationDbContext : IdentityDbContext
 {
     public AuthenticationDbContext(DbContextOptions<AuthenticationDbContext> options)
             : base(options)
@@ -16,7 +17,8 @@ public class AuthenticationDbContext: IdentityDbContext
     {
         base.OnModelCreating(builder);
 
-        builder.Entity<ApplicationUser>(b => { b.ToTable("ApplicationUsers"); });
+        builder.ApplyConfiguration(new ApplicationUserConfiguration());
+
         builder.Entity<IdentityUser>(b => { b.ToTable("Users"); });
         builder.Entity<IdentityRole>(b => { b.ToTable("Roles"); });
         builder.Entity<IdentityUserRole<string>>(b => { b.ToTable("UsersRoles"); });

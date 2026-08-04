@@ -7,6 +7,7 @@ namespace Dsw2026Tpi.Application.Services;
 
 public class DoctorService : IDoctorService
 {
+    //Falta rama mile
     private readonly IPersistence _persistence;
 
     public DoctorService(IPersistence persistence)
@@ -27,7 +28,7 @@ public class DoctorService : IDoctorService
             new DoctorModel.SpecialityDto(d.Speciality?.Id, d.Speciality?.Name)));
     }
 
-    async Task<List<DoctorModel.AvailabilityResponse>> GetDoctorAvailabilities(Guid doctorId)
+   public  async Task<List<DoctorModel.AvailabilityResponse>> GetDoctorAvailabilities(Guid doctorId)
     {
         var doctor= await _persistence.First<Doctor>(d => d.Id == doctorId && d.IsActive);
         if (doctor == null) return null;
@@ -49,7 +50,7 @@ public class DoctorService : IDoctorService
 
     }
 
-    async Task<DoctorModel.Response?> CreateDoctor(DoctorModel.Request model)
+   public async Task<DoctorModel.Response?> CreateDoctor(DoctorModel.Request model)
     {
         var speciality = await _persistence.First<Speciality>(s => s.Id == model.SpecialityId && !s.IsDeleted);
         if (speciality == null)
@@ -70,7 +71,7 @@ public class DoctorService : IDoctorService
 
     }
 
-    async Task<DoctorModel.Response?> UpdateDoctor(Guid id, DoctorModel.Request model)
+   public async Task<DoctorModel.Response?> UpdateDoctor(Guid id, DoctorModel.Request model)
     {
         var existingEntity = await _persistence.First<Doctor>(d => d.Id == id && d.IsActive);
         if (existingEntity == null)
@@ -95,7 +96,7 @@ public class DoctorService : IDoctorService
 
     }
 
-    async Task<bool> DeleteDoctor(Guid id)
+   public async Task<bool> DeleteDoctor(Guid id)
     {
 
         var existingEntity = await _persistence.First<Doctor>(d => d.Id == id && d.IsActive);
