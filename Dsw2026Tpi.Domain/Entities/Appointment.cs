@@ -1,20 +1,25 @@
 ﻿using Dsw2026Tpi.Domain.Status;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Dsw2026Tpi.Domain.Entities
+namespace Dsw2026Tpi.Domain.Entities;
+
+public class Appointment : EntityBase
 {
-    public class Appointment : EntityBase
+    public Guid AvailabilitySlotId { get; set; }
+    public Guid PatientId { get; set; }
+    public Patient Patient { get; set; }
+    public string Reason { get; set; }
+    public AppointmentStatus Status { get; set; } = AppointmentStatus.BOOKED;
+    public DateTime? CancelledAt { get; set; }
+    public DateTime? AttendedAt { get; set; }
+    public byte[] RowVersion { get; set; }
+    public AvailabilitySlot AvailabilitySlot { get; set; }
+
+    #region Constructor for EF
+#pragma warning disable CS8618
+    public Appointment()
     {
-        public Guid AvailabilitySlotId { get; set; }
-        public Guid PatientId { get; set; }
-        public Patient Patient { get; set; }
-        public string Reason { get; set; }
-        public AppointmentStatus Status { get; set; } = AppointmentStatus.BOOKED;
-        public DateTime? CancelledAt { get; set; }
-        public DateTime? AttendedAt { get; set; }
-        public byte[] RowVersion { get; set; }
-        public AvailabilitySlot AvailabilitySlot { get; set; }
     }
+#pragma warning restore CS8618
+    #endregion
+
 }

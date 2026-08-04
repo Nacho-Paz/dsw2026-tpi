@@ -26,27 +26,27 @@ public class DoctorService : IDoctorService
             _logger.LogWarning("Filtro de nombre inválido en GetAll: {Name}", name);
             throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
         }
-        
-            var doctors = await _persistence.Paginate<Doctor, string>(
-            pageSize, 
-            pageIndex,
-           d => d.IsActive && (string.IsNullOrWhiteSpace(name) || d.Name.Contains(name)),
-           x => x.Name,
-           nameof(Doctor.Speciality));
+
+        var doctors = await _persistence.Paginate<Doctor, string>(
+        pageSize,
+        pageIndex,
+        d => d.IsActive && (string.IsNullOrWhiteSpace(name) || d.Name.Contains(name)),
+        x => x.Name,
+        nameof(Doctor.Speciality));
 
         return doctors.Map(d => new DoctorModel.Response(d.Id, d.Name, d.LicenseNumber,
             new DoctorModel.SpecialityDto(d.Speciality?.Id, d.Speciality?.Name)));
     }
 
-   public  async Task<List<DoctorModel.AvailabilityResponse>> GetDoctorAvailabilities(Guid doctorId)
+    public async Task<List<DoctorModel.AvailabilityResponse>> GetDoctorAvailabilities(Guid doctorId)
     {
-        var doctor= await _persistence.First<Doctor>(d => d.Id == doctorId && d.IsActive);
+        var doctor = await _persistence.First<Doctor>(d => d.Id == doctorId && d.IsActive);
         if (doctor == null)
         {
             _logger.LogWarning("Médico con ID {DoctorId} no encontrado para consultar disponibilidades.", doctorId);
             throw new EntityNotFoundException("Doctor");
         }
-        var now= DateTime.Now;
+        var now = DateTime.Now;
         var rules = await _persistence.GetFiltered<AvailabilityRule>(
             r => r.DoctorId == doctorId && r.Month == now.Month && r.Year == now.Year && !r.Deleted,
             "Slots");
@@ -64,7 +64,7 @@ public class DoctorService : IDoctorService
 
     }
 
-   public async Task<DoctorModel.Response?> CreateDoctor(DoctorModel.Request model)
+    public async Task<DoctorModel.Response?> CreateDoctor(DoctorModel.Request model)
     {
         _logger.LogInformation("Iniciando la creación de un nuevo médico: {Name}", model.Name);
 
@@ -99,7 +99,7 @@ public class DoctorService : IDoctorService
 
     }
 
-   public async Task<DoctorModel.Response?> UpdateDoctor(Guid id, DoctorModel.Request model)
+    public async Task<DoctorModel.Response?> UpdateDoctor(Guid id, DoctorModel.Request model)
     {
         _logger.LogInformation("Iniciando la actualización del médico con ID: {DoctorId}", id);
         var existingEntity = await _persistence.First<Doctor>(d => d.Id == id && d.IsActive);
@@ -140,7 +140,7 @@ public class DoctorService : IDoctorService
 
     }
 
-   public async Task<bool> DeleteDoctor(Guid id)
+    public async Task<bool> DeleteDoctor(Guid id)
     {
         _logger.LogInformation("Iniciando la desactivación del médico con ID: {DoctorId}", id);
 

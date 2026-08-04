@@ -25,7 +25,6 @@ public class Dsw2026TpiDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.ApplyConfiguration(new ApplicationUserConfiguration());
         modelBuilder.ApplyConfiguration(new AppointmentConfiguration());
         modelBuilder.ApplyConfiguration(new AvailabilityRuleConfiguration());
         modelBuilder.ApplyConfiguration(new AvailabilitySlotConfiguration());

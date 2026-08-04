@@ -5,6 +5,7 @@ using Dsw2026Tpi.CrossCutting.Helpers;
 using Dsw2026Tpi.CrossCutting.Identity;
 using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Data.Identity;
+using Dsw2026Tpi.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
@@ -17,18 +18,22 @@ public class AuthenticationService : IAuthenticationService
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly JwtService _jwtService;
     private readonly ILogger<AuthenticationService> _logger;
+    private readonly IPatientService _petientService;
 
-    public AuthenticationService(UserManager<ApplicationUser> userManager,
+    public AuthenticationService(
+        UserManager<ApplicationUser> userManager,
         ISignInService signInManager,
         RoleManager<IdentityRole> roleManager,
         JwtService jwtService,
-        ILogger<AuthenticationService> logger)
+        ILogger<AuthenticationService> logger,
+        IPatientService patientService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _roleManager = roleManager;
         _jwtService = jwtService;
         _logger = logger;
+        _petientService = patientService;
     }
 
     public async Task<LoginAdminModel.Response> LoginAdmin(LoginAdminModel.Request request)
@@ -77,96 +82,97 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task<LoginPatientModel.Response> LoginPatient(LoginPatientModel.Request request)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || !request.Email.IsEmailValid())
+        if (string.IsNullOrWhiteSpace(request.Email) ||
+            !request.Email.IsEmailValid())
         {
-            throw new ValidationException();
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR)
+                .WithDetail("email", "invalid_email");
         }
 
         if (request.Dni < 1_000_000 || request.Dni > 99_999_999)
         {
-            throw new ValidationException();
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR)
+                .WithDetail("dni", "invalid_dni");
         }
 
-        // Buscar paciente por email
-        var user = await _userManager.FindByEmailAsync(request.Email);
+        var patient = await _petientService.GetByDni(Convert.ToString(request.Dni));
 
-        // Si no existe, crearlo automáticamente
-        if (user is null)
+        if (patient == null)
         {
-            user = new ApplicationUser
-            {
-                UserName = request.Email,
-                Email = request.Email,
-                //Dni = Convert.ToString(request.Dni),
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            var user = await _userManager.FindByEmailAsync(request.Email);
 
-            var createResult = await _userManager.CreateAsync(user);
-
-            if (!createResult.Succeeded)
+            if (user == null)
             {
-                throw new ConflictException(
-                    nameof(ErrorCodes.REGISTER_USER_CONFLICT),
-                    ErrorCodes.REGISTER_USER_CONFLICT)
-                    .WithDetail(
-                        createResult.Errors.Select(
-                            e => (e.Code, e.Description)));
+                user = new ApplicationUser
+                {
+                    UserName = request.Email,
+                    Email = request.Email,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                var result = await _userManager.CreateAsync(user);
+                
+                if (!result.Succeeded)
+                {
+                    _logger.LogWarning(
+                    "No se pudo crear automáticamente el usuario paciente {Email}",
+                    request.Email);
+
+                    throw new ConflictException(nameof(ErrorCodes.REGISTER_USER_CONFLICT),ErrorCodes.REGISTER_USER_CONFLICT)
+                        .WithDetail(result.Errors.Select(e => (e.Code, e.Description)));
+                }
+
+                var roleResult = await _userManager.AddToRoleAsync(user, Roles.Patient);
+
+                if (!roleResult.Succeeded)
+                {
+                    _logger.LogError("No se pudo asignar el rol paciente al usuario {Email}",request.Email);
+
+                    throw new ConflictException(nameof(ErrorCodes.REGISTER_USER_CONFLICT), ErrorCodes.REGISTER_USER_CONFLICT)
+                        .WithDetail(roleResult.Errors.Select(e => (e.Code, e.Description)));
+                }
+            }
+            else
+            {
+                var isPatient = await _userManager.IsInRoleAsync(user,Roles.Patient);
+
+                if (!isPatient)
+                {
+                    _logger.LogWarning("El usuario {Email} intentó acceder al login de paciente sin rol PACIENTE",request.Email);
+
+                    throw new AuthenticationException();
+                }
             }
 
-            var roleResult = await _userManager.AddToRoleAsync(
-                user,
-                Roles.Patient);
+            var patientToService = new Patient(Guid.Parse(user.Id), Convert.ToString(request.Dni));
 
-            if (!roleResult.Succeeded)
-            {
-                throw new ConflictException(
-                    nameof(ErrorCodes.REGISTER_USER_CONFLICT),
-                    ErrorCodes.REGISTER_USER_CONFLICT)
-                    .WithDetail(
-                        roleResult.Errors.Select(
-                            e => (e.Code, e.Description)));
-            }
-
-            _logger.LogInformation(
-                "Paciente creado automáticamente: {Email}",
-                request.Email);
+            _logger.LogInformation("Entidad paciente registrada: {Dni}",request.Dni);
         }
         else
         {
-            // Si existe, verificar que el DNI coincida
-            //if (user.Dni != Convert.ToString(request.Dni))
-            //{
-            //    _logger.LogWarning(
-            //        "Intento de acceso con DNI incorrecto para {Email}",
-            //        request.Email);
+            var user = await _userManager.FindByIdAsync(patient.UserId.ToString());
 
-            //    throw new AuthenticationException();
-            //}
+            if (user == null ||!string.Equals(user.Email,request.Email,StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("El Email no coincide con el DNI proporcionado: {Email}",request.Email);
 
-            // Verificar que tenga rol paciente
-            var isPatient = await _userManager.IsInRoleAsync(
-                user,
-                Roles.Patient);
+                throw new AuthenticationException();
+            }
+            var isPatient = await _userManager.IsInRoleAsync(user,Roles.Patient);
 
             if (!isPatient)
             {
+                _logger.LogWarning("El usuario {Email} no posee el rol Paciente",request.Email);
+
                 throw new AuthenticationException();
             }
         }
 
-        // Generar JWT
-        var token = _jwtService.GenerateToken(
-            user.UserName!,
-            Roles.Patient);
+        var token = _jwtService.GenerateToken(Convert.ToString(request.Dni),Roles.Patient);
 
-        _logger.LogInformation(
-            "Login paciente exitoso para {Email}",
-            request.Email);
+        _logger.LogInformation("Login paciente exitoso para {Email}",request.Email);
 
-        return new LoginPatientModel.Response(
-            token,
-            Roles.Patient);
+        return new LoginPatientModel.Response(token,Roles.Patient);
     }
 
     public async Task<RegisterModel.Response> Register(RegisterModel.Request request)
