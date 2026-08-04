@@ -19,8 +19,8 @@ public class AuthenticationController : AppController
     }
 
     [HttpPost("admin/register")]
-    [Authorize(Roles = Roles.Administrator)]
-    [EnableRateLimiting("GeneralPolicy")] //Sacar para crear
+    //[Authorize(Roles = Roles.Administrator)]
+    //[EnableRateLimiting("GeneralPolicy")] //Sacar para crear
     //[ProducesResponseType(StatusCodes.Status200OK)]
     //[ProducesResponseType(StatusCodes.Status400BadRequest)]
     //[ProducesResponseType(StatusCodes.Status409Conflict)]
