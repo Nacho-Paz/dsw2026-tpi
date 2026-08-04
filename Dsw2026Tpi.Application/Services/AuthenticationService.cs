@@ -181,15 +181,8 @@ public class AuthenticationService : IAuthenticationService
     {
         if (string.IsNullOrWhiteSpace(request.Email) || !request.Email.IsEmailValid())
         {
-            throw new ValidationException(ErrorCodes.REGISTER_USER_INVALID, nameof(ErrorCodes.REGISTER_USER_INVALID));
-        } //TODO: Terminar de depurar y seguir este método para ver como se forma el error
-
-        if (string.IsNullOrWhiteSpace(request.Password) ||
-            request.Password.Length < 8)
-        {
-            throw new ValidationException(
-                ErrorCodes.REGISTER_USER_INVALID,
-                nameof(ErrorCodes.REGISTER_USER_INVALID));
+            throw new ValidationException(nameof(ErrorCodes.REGISTER_USER_INVALID), ErrorCodes.REGISTER_USER_INVALID)
+                .WithDetail("email", "invalid_email");
         }
 
         var user = new ApplicationUser
@@ -202,11 +195,33 @@ public class AuthenticationService : IAuthenticationService
 
         var result = await _userManager.CreateAsync(user, request.Password);
 
-        if (!result.Succeeded) throw new ConflictException(nameof(ErrorCodes.REGISTER_USER_CONFLICT),
-            ErrorCodes.REGISTER_USER_CONFLICT)
-                .WithDetail(result.Errors.Select(e => (e.Code, e.Description)));
+        if (!result.Succeeded)
+        {
+            _logger.LogWarning(
+                "No se pudo registrar el usuario {Email}",
+                request.Email);
 
-        _ = await _userManager.AddToRoleAsync(user, Roles.Administrator);
+            throw new ConflictException(
+                nameof(ErrorCodes.REGISTER_USER_CONFLICT),
+                ErrorCodes.REGISTER_USER_CONFLICT)
+                .WithDetail(result.Errors.Select(e => (e.Code, e.Description)));
+        }
+
+
+        var roleResult = await _userManager.AddToRoleAsync(user, Roles.Administrator);
+
+        //TODO: Validación de role de forma preventiva 
+        if (!roleResult.Succeeded)
+        {
+            _logger.LogError(
+                "No se pudo asignar el rol administrador al usuario {Email}",
+                request.Email);
+
+            throw new ConflictException(
+                nameof(ErrorCodes.REGISTER_USER_CONFLICT),
+                ErrorCodes.REGISTER_USER_CONFLICT)
+                .WithDetail(roleResult.Errors.Select(e => (e.Code, e.Description)));
+        }
 
         _logger.LogInformation("Usuario registrado: {Email}", request.Email);
 
