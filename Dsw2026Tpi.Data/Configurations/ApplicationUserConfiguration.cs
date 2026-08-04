@@ -10,11 +10,11 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
     {
         builder.ToTable("ApplicationUsers");
 
-        builder.Property(x => x.IsActive).IsRequired();
+        builder.Property(x => x.Deleted).IsRequired();
 
-        builder.Property(x => x.Dni).HasMaxLength(8);
+        //builder.Property(x => x.Dni).HasMaxLength(8);
 
-        builder.HasIndex(x => x.Dni).IsUnique();
+        //builder.HasIndex(x => x.Dni).IsUnique();
 
         builder.Property(x => x.CreatedAt).IsRequired();
 

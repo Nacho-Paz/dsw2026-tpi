@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dsw2026Tpi.Data.Identity;
 
-public class AuthenticationDbContext : IdentityDbContext
+public class AuthenticationDbContext : IdentityDbContext<ApplicationUser>
 {
     public AuthenticationDbContext(DbContextOptions<AuthenticationDbContext> options)
             : base(options)

@@ -33,18 +33,10 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task<LoginAdminModel.Response> LoginAdmin(LoginAdminModel.Request request)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) ||
-            !request.Email.IsEmailValid())
+        if (string.IsNullOrWhiteSpace(request.Email) || !request.Email.IsEmailValid())
         {
-            //TODO: Imprimir esto con ErrorCodes y sumar log
-            throw new ValidationException("Email invalido", "Error");
-            //throw new ValidationException(ErrorCodes.REGISTER_USER_INVALID,nameof(ErrorCodes.REGISTER_USER_INVALID));
-        }
-        if (string.IsNullOrWhiteSpace(request.Password) ||
-            request.Password.Length < 8)
-        {
-            //TODO: Imprimir esto con ErrorCodes y sumar log
-            throw new ValidationException("Password invalido", "Error");
+            throw new ValidationException(nameof(ErrorCodes.REGISTER_USER_INVALID), ErrorCodes.REGISTER_USER_INVALID)
+                .WithDetail("Email", "Invalid_Email");
         }
 
         var user = await _userManager.FindByEmailAsync(request.Email);
@@ -52,8 +44,8 @@ public class AuthenticationService : IAuthenticationService
         if (user is null)
         {
             _logger.LogWarning("Intento de login administrador fallido para {Email}", request.Email);
-            //throw new AuthenticationException();
-            throw new ValidationException("Ese email no se encuentra registrado", "Error");
+            throw new AuthenticationException();
+            //.WithDetail("User","User_Not_Found");
         }
 
         var passwordValid = await _signInManager.CheckPassword(user, request.Password);
@@ -61,21 +53,21 @@ public class AuthenticationService : IAuthenticationService
         if (!passwordValid)
         {
             _logger.LogError("Intento de login fallido para: {Email}", request.Email);
-            //throw new AuthenticationException();
-            throw new ValidationException("Password invalido", "Error");
+            throw new AuthenticationException();
         }
-
+        //var isAdministrator = await _userManager.IsInRoleAsync(user,Roles.Administrator); TODO: Probar luego con esto
         var role = await _userManager.GetRolesAsync(user);
 
         if (!role.Contains(Roles.Administrator))
         {
             _logger.LogWarning("Usuario {Email} intentó acceder al login de administrador", request.Email);
-
-            //throw new AuthenticationException();
-            throw new ValidationException("Su email no cuenta con el rol ADMINISTADOR", "Error");
+            throw new AuthenticationException();
+            //.WithDetail("Su email no cuenta con el rol ADMINISTADOR", "Error");
         }
 
         var token = _jwtService.GenerateToken(user.UserName!, Roles.Administrator);
+
+        _logger.LogInformation("Login administrador exitoso para {Email}", request.Email);
 
         return new LoginAdminModel.Response(
             token,
@@ -105,7 +97,7 @@ public class AuthenticationService : IAuthenticationService
             {
                 UserName = request.Email,
                 Email = request.Email,
-                Dni = Convert.ToString(request.Dni),
+                //Dni = Convert.ToString(request.Dni),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -143,14 +135,14 @@ public class AuthenticationService : IAuthenticationService
         else
         {
             // Si existe, verificar que el DNI coincida
-            if (user.Dni != Convert.ToString(request.Dni))
-            {
-                _logger.LogWarning(
-                    "Intento de acceso con DNI incorrecto para {Email}",
-                    request.Email);
+            //if (user.Dni != Convert.ToString(request.Dni))
+            //{
+            //    _logger.LogWarning(
+            //        "Intento de acceso con DNI incorrecto para {Email}",
+            //        request.Email);
 
-                throw new AuthenticationException();
-            }
+            //    throw new AuthenticationException();
+            //}
 
             // Verificar que tenga rol paciente
             var isPatient = await _userManager.IsInRoleAsync(
