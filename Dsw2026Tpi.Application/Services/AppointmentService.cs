@@ -7,12 +7,8 @@ using Dsw2026Tpi.Domain.Enum;
 using Dsw2026Tpi.Domain.Interfaces;
 using Dsw2026Tpi.Domain.Status;
 using Microsoft.EntityFrameworkCore;
-<<<<<<< HEAD
-=======
 using Microsoft.Extensions.Logging;
->>>>>>> feature/modulo-doctors
 
-//TODO: revisar status 
 namespace Dsw2026Tpi.Application.Services
 {
     public class AppointmentService : IAppointmentService 
@@ -26,16 +22,13 @@ namespace Dsw2026Tpi.Application.Services
         }
         public async Task<AppointmentModel.Response> CreateAppointmentAsync(AppointmentModel.Request request)
         {
-<<<<<<< HEAD
             string dniString = request.Patient.Dni.ToString();
             if (dniString.Length < 7 || dniString.Length > 10) //TODO: Dni entre 7 y 8
             {
                 throw new ValidationException("El DNI debe tener entre 7 y 10 dígitos.", "INVALID_DNI");
             }
-=======
             _logger.LogInformation("Iniciando solicitud de reserva de turno para el médico {DoctorId} y el slot {SlotId}.",
                 request.DoctorId, request.AvailabilitySlotId);
->>>>>>> feature/modulo-doctors
 
             ValidateRequest(request);
             string dniString = request.Patient.Dni.ToString();
