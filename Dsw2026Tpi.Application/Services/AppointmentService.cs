@@ -1,6 +1,7 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
+using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Enum;
 using Dsw2026Tpi.Domain.Interfaces;
@@ -70,7 +71,7 @@ namespace Dsw2026Tpi.Application.Services
             }
             catch (DbUpdateConcurrencyException)
             {
-                throw new ConflictException("APPOINTMENT_CONFLICT", "Slot already booked");
+                throw new ConflictException("APPOINTMENT_CONFLICT", "El turno ya esta reservado");
             }
 
             return new AppointmentModel.Response(
@@ -78,7 +79,7 @@ namespace Dsw2026Tpi.Application.Services
                 appointment.AvailabilitySlotId,
                 appointment.PatientId,
                 appointment.Reason,
-                appointment.Status, //TODO: revisar dto
+                appointment.Status.ToString(), 
                 DateTime.Now
             );
         }
@@ -86,28 +87,28 @@ namespace Dsw2026Tpi.Application.Services
         private static void ValidateRequest(AppointmentModel.Request request)
         {
             if (request == null) throw new ValidationException( 
-                "El cuerpo de la solicitud es obligatorio.","INVALID_REQUEST");
+                "El cuerpo de la solicitud es obligatorio.", ErrorCodes.VALIDATION_ERROR);
 
             if (request.Patient == null) throw new ValidationException(
-                "El paciente es obligatorio.", "INVALID_PATIENT");
+                "El paciente es obligatorio.", ErrorCodes.VALIDATION_ERROR);
 
             if (request.AvailabilitySlotId == Guid.Empty) throw new ValidationException(
-                "El availabilitySlotId es obligatorio.","INVALID_SLOT_ID");
+                "El availabilitySlotId es obligatorio.", ErrorCodes.VALIDATION_ERROR);
 
             if (request.Patient.Dni == 0) throw new ValidationException(
-                "El DNI es obligatorio.","INVALID_DNI");
+                "El DNI es obligatorio.", ErrorCodes.VALIDATION_ERROR);
 
             var dni = request.Patient.Dni.ToString();
 
             if (dni.Length < 7 || dni.Length > 10) throw new ValidationException(
-                "El DNI debe tener entre 7 y 10 dígitos.","INVALID_DNI");
+                "El DNI debe tener entre 7 y 10 dígitos.", ErrorCodes.VALIDATION_ERROR);
 
             if (string.IsNullOrWhiteSpace(request.Reason)) throw new ValidationException( 
-                "El motivo es obligatorio.", "INVALID_REASON");
+                "El motivo es obligatorio.", ErrorCodes.VALIDATION_ERROR);
 
             if (request.Reason.Trim().Length < 5)
                 throw new ValidationException(
-                    "El motivo debe tener al menos 5 caracteres.", "INVALID_REASON");
+                    "El motivo debe tener al menos 5 caracteres.", ErrorCodes.VALIDATION_ERROR);
         }
 
         public async Task<object> GetActiveAppointmentsByPatientAsync(long dni)
@@ -221,8 +222,8 @@ namespace Dsw2026Tpi.Application.Services
             }
 
             var data = pagedResult.Data.Select(a => new AppointmentModel.SearchItem(
-                AppointmentsId: a.Id,
-                AppointmentsStatus: a.Status, //TODO: revisar dto
+                AppointmentId: a.Id,
+                AppointmentStatus: a.Status.ToString(),
                 Patient: new AppointmentModel.PatientInfo(
                     Dni: long.Parse(a.Patient?.Dni ?? "0"),
                     FullName: a.Patient?.FullName ?? ""),
