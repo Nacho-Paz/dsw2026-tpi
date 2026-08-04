@@ -121,7 +121,7 @@ namespace Dsw2026Tpi.Application.Services
 
             if (patient == null)
             {
-                throw new EntityNotFoundException("Paciente");
+                throw new EntityNotFoundException(nameof(Patient));
             }
 
             if (activeAppointments == null || !activeAppointments.Any())
@@ -167,7 +167,7 @@ namespace Dsw2026Tpi.Application.Services
         {
             if (!DateTime.TryParse(date, out DateTime parsedDate))
             {
-                throw new ValidationException("Formato de fecha inválido. Use YYYY-MM-DD.", "INVALID_DATE");
+                throw new ValidationException("Formato de fecha inválido. Use YYYY-MM-DD.", ErrorCodes.VALIDATION_ERROR);
             }
 
             var appointments = await _persistence.GetFiltered<Appointment>(

@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using static Dsw2026Tpi.Application.Dtos.AvailabilityModel;
 
 namespace Dsw2026Tpi.Application.Services
 {
@@ -24,16 +25,8 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task<List<AvailabilityRule>> CreateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
-            if (request == null)
-            {
-                throw new ValidationException("El cuerpo de la solicitud es obligatorio.", ErrorCodes.VALIDATION_ERROR);
-            }
 
-            if (request.Days == null || !request.Days.Any())
-            {
-                throw new ValidationException("Debe enviar al menos un día de disponibilidad.", ErrorCodes.VALIDATION_ERROR);
-            }
-
+            ValidateRequest(request);
             var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId && d.IsActive);
 
             if (doctor == null)
@@ -65,15 +58,7 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task<List<AvailabilityRule>> UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
         {
-            if (request == null)
-            {
-                throw new ValidationException("El cuerpo de la solicitud es obligatorio.", ErrorCodes.VALIDATION_ERROR);
-            }
-
-            if (request.Days == null || !request.Days.Any())
-            {
-                throw new ValidationException("Debe enviar al menos un día de disponibilidad.", ErrorCodes.VALIDATION_ERROR);
-            }
+            ValidateRequest(request);
 
             var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId && d.IsActive);
 
@@ -122,8 +107,23 @@ namespace Dsw2026Tpi.Application.Services
             foreach (var rule in newRules)
             {
                 await _persistence.Add(rule);
+
             }return newRules;
         }
+
+        private static void ValidateRequest(AvailabilityModel.Request request)
+        {
+            if (request == null)
+            {
+                throw new ValidationException("El cuerpo de la solicitud es obligatorio.", ErrorCodes.VALIDATION_ERROR);
+            }
+
+            if (request.Days == null || !request.Days.Any())
+            {
+                throw new ValidationException("Debe enviar al menos un día de disponibilidad.", ErrorCodes.VALIDATION_ERROR);
+            }
+        }
+
 
         private async Task<List<AvailabilityRule>> GenerateRulesAndSlots(AvailabilityModel.Request request, int month, int year, HashSet<(DateTime Date, TimeSpan Time)> preservedSlots = null)
         {
@@ -157,37 +157,31 @@ namespace Dsw2026Tpi.Application.Services
             {
                 if (!TimeSpan.TryParse(dayRule.StartTime, out var startTime))
                     {
-                        throw new ConflictException(
-                            "INVALID_TIME_FORMAT",
-                            $"El horario de inicio del día {dayRule.Day} tiene un formato inválido.");
+                        throw new ConflictException( "INVALID_TIME_FORMAT", $"El horario de inicio del día {dayRule.Day} tiene un formato inválido.");
                     }
 
                 if (!TimeSpan.TryParse(dayRule.EndTime, out var endTime))
                     {
-                        throw new ConflictException(
-                            "INVALID_TIME_FORMAT",
-                            $"El horario de fin del día {dayRule.Day} tiene un formato inválido.");
+                        throw new ConflictException("INVALID_TIME_FORMAT", $"El horario de fin del día {dayRule.Day} tiene un formato inválido.");
                     }
 
                 if (startTime >= endTime)
                     {
-                        throw new ConflictException(
-                            "INVALID_TIME",
-                            $"El horario de inicio debe ser menor al de salida para el día {dayRule.Day}");
+                        throw new ConflictException( "INVALID_TIME", $"El horario de inicio debe ser menor al de salida para el día {dayRule.Day}");
                     }
+
+                DayOfWeek targetDayOfWeek = MapDayOfWeek(dayRule.Day);
 
                 var rule = new AvailabilityRule
                 {
                     DoctorId = request.DoctorId,
                     Month = month,
                     Year = year,
-                    DayOfWeek = dayRule.Day.ToUpper(), // TODO: revisar dayofweek
+                    DayOfWeek = targetDayOfWeek, 
                     StartTime = startTime,
                     EndTime = endTime,
                     Slots = new List<AvailabilitySlot>()
                 };
-
-                DayOfWeek targetDayOfWeek = MapDayOfWeek(dayRule.Day);
 
                 for (int day = 1; day <= daysInMonth; day++)
                 {
@@ -227,7 +221,7 @@ namespace Dsw2026Tpi.Application.Services
 
             return rules;
         }
-
+        
         private DayOfWeek MapDayOfWeek(string day)
         {
             string diaLimpio = day.Trim().ToUpper();
@@ -262,13 +256,12 @@ namespace Dsw2026Tpi.Application.Services
 
             if (!File.Exists(filePath))
             {
-                return holidays;
+                throw new ValidationException("No se encontró el archivo de feriados.",ErrorCodes.VALIDATION_ERROR);
             }
-
-            try
-            {
-                var json = await File.ReadAllTextAsync(filePath);
-                var loadedHolidays = JsonSerializer.Deserialize<List<DateTime>>(json);
+            
+            
+            var json = await File.ReadAllTextAsync(filePath);
+            var loadedHolidays = JsonSerializer.Deserialize<List<DateTime>>(json);
 
                 if (loadedHolidays != null)
                 {
@@ -276,15 +269,7 @@ namespace Dsw2026Tpi.Application.Services
                     {
                         holidays.Add(date.Date);
                     }
-                }
-            }
-            
-            catch (Exception)
-            {
-                throw;
-            }
-
-            return holidays;
+                } return holidays;
         }
 
 
