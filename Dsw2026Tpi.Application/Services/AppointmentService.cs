@@ -4,11 +4,8 @@ using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
+//TODO: revisar status 
 namespace Dsw2026Tpi.Application.Services
 {
     public class AppointmentService : IAppointmentService 
@@ -21,7 +18,7 @@ namespace Dsw2026Tpi.Application.Services
         public async Task<AppointmentModel.Response> CreateAppointmentAsync(AppointmentModel.Request request)
         {
             string dniString = request.Patient.Dni.ToString();
-            if (dniString.Length < 7 || dniString.Length > 10)
+            if (dniString.Length < 7 || dniString.Length > 10) //TODO: Dni entre 7 y 8
             {
                 throw new ValidationException("El DNI debe tener entre 7 y 10 dígitos.", "INVALID_DNI");
             }
