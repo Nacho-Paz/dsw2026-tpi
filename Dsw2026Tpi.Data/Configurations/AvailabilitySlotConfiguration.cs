@@ -15,12 +15,14 @@ namespace Dsw2026Tpi.Data.Configurations
         {
             builder.ToTable("AvailabilitySlots");
             builder.HasKey(a => a.Id);
-            builder.Property(a => a.Status).HasMaxLength(20);
+            builder.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
             builder.Property(a => a.StartTime).IsRequired();
             builder.Property(s => s.SlotDate).IsRequired();
             builder.Property(a => a.EndTime).IsRequired();
-            builder.HasOne(a => a.AvailabilityRule).WithMany().HasForeignKey(a => a.AvailabilityRuleId).OnDelete(DeleteBehavior.Cascade);
-
+            builder.HasOne(a => a.AvailabilityRule).WithMany(a => a.Slots).HasForeignKey(a => a.AvailabilityRuleId).OnDelete(DeleteBehavior.Cascade);
+            builder.HasIndex(x => new { x.AvailabilityRuleId, x.SlotDate, x.StartTime });
+            builder.Property(x => x.Deleted).HasDefaultValue(false);
+            builder.Property(x => x.RowVersion).IsRowVersion();
         }
     }
 }

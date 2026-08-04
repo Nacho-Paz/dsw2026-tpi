@@ -196,14 +196,13 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.Property<Guid>("AvailabilityRuleId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("AvailabilityRuleId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("Deleted")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<Guid>("DoctorId")
                         .HasColumnType("uniqueidentifier");
@@ -212,8 +211,10 @@ namespace Dsw2026Tpi.Data.Migrations
                         .HasColumnType("time");
 
                     b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
                         .IsRequired()
-                        .HasColumnType("varbinary(max)");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<DateTime>("SlotDate")
                         .HasColumnType("datetime2");
@@ -221,18 +222,17 @@ namespace Dsw2026Tpi.Data.Migrations
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time");
 
-                    b.Property<int>("Status")
+                    b.Property<string>("Status")
+                        .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AvailabilityRuleId");
-
-                    b.HasIndex("AvailabilityRuleId1");
+                    b.HasIndex("AvailabilityRuleId", "SlotDate", "StartTime");
 
                     b.ToTable("AvailabilitySlots", (string)null);
                 });
@@ -382,14 +382,10 @@ namespace Dsw2026Tpi.Data.Migrations
             modelBuilder.Entity("Dsw2026Tpi.Domain.Entities.AvailabilitySlot", b =>
                 {
                     b.HasOne("Dsw2026Tpi.Domain.Entities.AvailabilityRule", "AvailabilityRule")
-                        .WithMany()
+                        .WithMany("Slots")
                         .HasForeignKey("AvailabilityRuleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Dsw2026Tpi.Domain.Entities.AvailabilityRule", null)
-                        .WithMany("Slots")
-                        .HasForeignKey("AvailabilityRuleId1");
 
                     b.Navigation("AvailabilityRule");
                 });

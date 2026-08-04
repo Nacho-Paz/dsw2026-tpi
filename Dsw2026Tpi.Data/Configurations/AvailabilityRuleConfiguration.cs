@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Dsw2026Tpi.Domain.Entities;
+using Dsw2026Tpi.Domain.Status; 
 
 namespace Dsw2026Tpi.Data.Configurations
 {
@@ -25,15 +26,13 @@ namespace Dsw2026Tpi.Data.Configurations
 
 
             //esta parte es posible que se borre, no es necesario crear un indice con un objeto anonimo 
-                builder.HasIndex(x => new { x.DoctorId, x.Year, x.Month, x.DayOfWeek, x.StartTime, x.EndTime })
-                       .IsUnique()
-                       .HasFilter("[Deleted] = 0")
-                       .HasDatabaseName("UNIQUE_Doctor_Time");
+            builder.HasIndex(x => new { x.DoctorId, x.Year, x.Month, x.DayOfWeek, x.StartTime, x.EndTime })
+                   .IsUnique()
+                   .HasFilter("[Deleted] = 0")
+                   .HasDatabaseName("UNIQUE_Doctor_Time");
 
-                builder.HasOne(x => x.Doctor)
-                       .WithMany()
-                       .HasForeignKey(x => x.DoctorId);
-            }
+            builder.HasMany(r => r.Slots).WithOne(s => s.AvailabilityRule).HasForeignKey(s => s.AvailabilityRuleId);
+        }
 
         }
     }
