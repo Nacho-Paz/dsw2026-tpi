@@ -2,7 +2,7 @@
 
 namespace Dsw2026Tpi.Application.Dtos
 {
-    public class SpecialityQueryFilter
+    public class SpecialtyQueryFilter
     {
         public int PageSize {  get; set; }
         public int PageIndex { get; set; }

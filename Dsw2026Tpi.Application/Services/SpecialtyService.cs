@@ -10,20 +10,20 @@ using Microsoft.Extensions.Logging;
 
 namespace Dsw2026Tpi.Application.Services
 {
-    public class SpecialityService : ISpecialityService
+    public class SpecialtyService : ISpecialtyService
     {
         private readonly IPersistence _persistence;
-        private readonly ILogger<SpecialityService> _logger;
-        public SpecialityService(IPersistence persistence, ILogger<SpecialityService> logger)
+        private readonly ILogger<SpecialtyService> _logger;
+        public SpecialtyService(IPersistence persistence, ILogger<SpecialtyService> logger)
         {
             _persistence = persistence;
             _logger = logger;
         }
 
-        public async Task<Pagination<SpecialityModel>> GetSpecialities(SpecialityQueryFilter filter)
+        public async Task<Pagination<SpecialtyModel>> GetSpecialties(SpecialtyQueryFilter filter)
 
         {
-            var specialitiesList = await _persistence.GetFiltered<Speciality>(
+            var specialitiesList = await _persistence.GetFiltered<Specialty>(
                 s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name))); 
 
 
@@ -39,7 +39,7 @@ namespace Dsw2026Tpi.Application.Services
             var totalRecords = query.Count();
             if (totalRecords == 0)
             {
-                return Pagination<SpecialityModel>.Empty;
+                return Pagination<SpecialtyModel>.Empty;
             }
 
             var pagedData = query
@@ -47,7 +47,7 @@ namespace Dsw2026Tpi.Application.Services
                 .Take(filter.PageSize)
                 .ToList();
 
-            var paginationResult = new Pagination<Speciality>(
+            var paginationResult = new Pagination<Specialty>(
                 filter.PageSize,
                 filter.PageIndex,
                 totalRecords,
@@ -55,7 +55,7 @@ namespace Dsw2026Tpi.Application.Services
 
                 );
 
-            return paginationResult.Map(s => new SpecialityModel
+            return paginationResult.Map(s => new SpecialtyModel
             {
                 Id = s.Id,
                 Name = s.Name,
@@ -64,7 +64,7 @@ namespace Dsw2026Tpi.Application.Services
 
         }
 
-        public async Task<SpecialityModel> Createspeciality(SpecialityCreateModel model)
+        public async Task<SpecialtyModel> Createspecialty(SpecialtyCreateModel model)
 
         {
             _logger.LogInformation("Iniciando la creación de una nueva especialidad con el nombre: {Name}", model.Name);
@@ -85,11 +85,11 @@ namespace Dsw2026Tpi.Application.Services
             }
 
     
-            var newSpeciality = new Speciality(model.Name, model.Description);
+            var newSpeciality = new Specialty(model.Name, model.Description);
             await _persistence.Add(newSpeciality);
             _logger.LogInformation("Especialidad creada exitosamente con ID: {Id}", newSpeciality.Id);
 
-            return new SpecialityModel
+            return new SpecialtyModel
             {
                 Id = newSpeciality.Id,
                 Name = newSpeciality.Name,
@@ -97,7 +97,7 @@ namespace Dsw2026Tpi.Application.Services
             };
 
         }
-        public async Task<SpecialityModel> UpdateSpeciality(Guid id, SpecialityCreateModel model)
+        public async Task<SpecialtyModel> UpdateSpecialty(Guid id, SpecialtyCreateModel model)
         {
 
             _logger.LogInformation("Iniciando la actualización de la especialidad con ID: {Id}", id);
@@ -118,7 +118,7 @@ namespace Dsw2026Tpi.Application.Services
                 throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
             }
 
-            var existingEntity = await _persistence.First<Speciality>(s => s.Id == id);
+            var existingEntity = await _persistence.First<Specialty>(s => s.Id == id);
             if (existingEntity == null || existingEntity.IsDeleted) return null;
 
             existingEntity.Name = model.Name;
@@ -127,18 +127,18 @@ namespace Dsw2026Tpi.Application.Services
             await _persistence.Update(existingEntity);
             _logger.LogInformation("Especialidad con ID: {Id} actualizada exitosamente.", id);
 
-            return new SpecialityModel
+            return new SpecialtyModel
             {
                 Id = existingEntity.Id,
                 Name = existingEntity.Name,
                 Description = existingEntity.Description
             };
         }
-        public async Task<bool> DeleteSpeciality(Guid id)
+        public async Task<bool> DeleteSpecialty(Guid id)
         {
             _logger.LogInformation("Iniciando la desactivación de la especialidad con ID: {Id}", id);
 
-            var existingEntity = await _persistence.First<Speciality>(s => s.Id == id);
+            var existingEntity = await _persistence.First<Specialty>(s => s.Id == id);
             if (existingEntity == null || existingEntity.IsDeleted)
             {
                 _logger.LogWarning("Especialidad con ID: {Id} no encontrada o ya eliminada.", id);

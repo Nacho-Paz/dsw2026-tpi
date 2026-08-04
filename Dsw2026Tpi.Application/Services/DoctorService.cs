@@ -78,7 +78,7 @@ public class DoctorService : IDoctorService
             _logger.LogWarning("Intento de creación de médico fallido por validación inválida.");
             throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
         }
-        var speciality = await _persistence.First<Speciality>(s => s.Id == model.SpecialityId && !s.IsDeleted);
+        var speciality = await _persistence.First<Specialty>(s => s.Id == model.SpecialityId && !s.IsDeleted);
         if (speciality == null)
         {
             _logger.LogWarning("Especialidad con ID {SpecialityId} no encontrada al crear médico.", model.SpecialityId);
@@ -121,7 +121,7 @@ public class DoctorService : IDoctorService
 
             throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
         }
-        var speciality = await _persistence.First<Speciality>(s => s.Id == model.SpecialityId && !s.IsDeleted);
+        var speciality = await _persistence.First<Specialty>(s => s.Id == model.SpecialityId && !s.IsDeleted);
         if (speciality == null)
         {
             _logger.LogWarning("La especialidad con ID {SpecialityId} no fue encontrada al intentar actualizar el médico {DoctorId}.", model.SpecialityId, id);
