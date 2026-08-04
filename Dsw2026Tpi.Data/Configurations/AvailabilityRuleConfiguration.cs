@@ -26,7 +26,7 @@ namespace Dsw2026Tpi.Data.Configurations
 
             //esta parte es posible que se borre, no es necesario crear un indice con un objeto anonimo 
                 builder.HasIndex(x => new { x.DoctorId, x.Year, x.Month, x.DayOfWeek, x.StartTime, x.EndTime })
-                       .IsUnique()//TODO: revisar esto
+                       .IsUnique()
                        .HasFilter("[Deleted] = 0")
                        .HasDatabaseName("UNIQUE_Doctor_Time");
 

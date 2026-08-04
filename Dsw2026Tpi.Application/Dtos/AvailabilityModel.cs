@@ -26,9 +26,5 @@ namespace Dsw2026Tpi.Application.Dtos
             string EndTime,
             List<SlotResponse> Slots
         );
-
     }
-
 }
-
-//TODO: REVISAR CON TPI 

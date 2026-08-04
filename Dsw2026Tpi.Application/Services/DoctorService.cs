@@ -44,7 +44,7 @@ public class DoctorService : IDoctorService
 
         return rules.Select(r => new DoctorModel.AvailabilityResponse(
             r.Id,
-            r.DayOfWeek,
+            r.DayOfWeek.ToString(),
             r.StartTime.ToString(@"hh\:mm"),
             r.EndTime.ToString(@"hh\:mm"))).ToList();
 

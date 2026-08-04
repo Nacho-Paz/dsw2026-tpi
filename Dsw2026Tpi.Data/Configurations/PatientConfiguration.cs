@@ -14,7 +14,7 @@ namespace Dsw2026Tpi.Data.Configurations
             builder.ToTable("Patients");
 
             builder.HasKey(p => p.Id);
-            builder.Property(p => p.Nombre).HasMaxLength(150);
+            builder.Property(p => p.FullName).HasMaxLength(150);
             builder.HasIndex(p => p.Dni).IsUnique();
             builder.Property(p => p.Dni).IsRequired().HasMaxLength(10);
             builder.Property(p => p.UserId).IsRequired();

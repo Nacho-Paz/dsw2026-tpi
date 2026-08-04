@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Dsw2026Tpi.Domain.Entities;
 using System.Collections.Generic;
 using System.Text;
+using Dsw2026Tpi.Domain.Status;
+using Dsw2026Tpi.Domain.Enum;
 
 namespace Dsw2026Tpi.Data.Configurations
 {
@@ -18,6 +20,7 @@ namespace Dsw2026Tpi.Data.Configurations
             builder.Property(s => s.SlotDate).IsRequired();
             builder.Property(a => a.EndTime).IsRequired();
             builder.HasOne(a => a.AvailabilityRule).WithMany().HasForeignKey(a => a.AvailabilityRuleId).OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }
