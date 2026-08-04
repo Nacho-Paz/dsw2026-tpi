@@ -4,4 +4,5 @@
   <Project Path="Dsw2026Tpi.CrossCutting/Dsw2026Tpi.CrossCutting.csproj" Id="0dd6d6ea-0e59-4ffb-9a7f-f9efc8788ae6" />
   <Project Path="Dsw2026Tpi.Data/Dsw2026Tpi.Data.csproj" />
   <Project Path="Dsw2026Tpi.Domain/Dsw2026Tpi.Domain.csproj" />
+  <Project Path="PruebasUnitarias/PruebasUnitariasTPI.csproj" Id="9ec7296e-4dcf-41bb-8f5f-aab68344ad20" />
 </Solution>
