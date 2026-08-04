@@ -3,6 +3,7 @@ using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
+using Dsw2026Tpi.Domain.Enum;
 using Dsw2026Tpi.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-//TODO: revisar status
+
 namespace Dsw2026Tpi.Application.Services
 {
     public class AvailabilityService : IAvailabilityService
@@ -101,7 +102,7 @@ namespace Dsw2026Tpi.Application.Services
                     {
                         foreach (var slot in rule.Slots)
                         {
-                            if (slot.Status == "BOOKED")
+                            if (slot.Status == SlotStatus.BOOKED)
                             {
                                 preservedSlots.Add((slot.SlotDate.Date, slot.StartTime));
                             }
@@ -180,7 +181,7 @@ namespace Dsw2026Tpi.Application.Services
                     DoctorId = request.DoctorId,
                     Month = month,
                     Year = year,
-                    DayOfWeek = dayRule.Day.ToUpper(),
+                    DayOfWeek = dayRule.Day.ToUpper(), // TODO: revisar dayofweek
                     StartTime = startTime,
                     EndTime = endTime,
                     Slots = new List<AvailabilitySlot>()
@@ -207,7 +208,7 @@ namespace Dsw2026Tpi.Application.Services
                                     SlotDate = currentDate,
                                     StartTime = currentSlotStart,
                                     EndTime = currentSlotStart + duracionTurno,
-                                    Status = "AVAILABLE",
+                                    Status = SlotStatus.AVAILABLE,
                                     Deleted = false,
                                     DoctorId = request.DoctorId
                                 });
