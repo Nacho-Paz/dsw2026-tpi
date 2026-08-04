@@ -17,8 +17,6 @@ namespace Dsw2026Tpi.Data.Configurations
             builder.Property(p => p.FullName).HasMaxLength(150);
             builder.HasIndex(p => p.Dni).IsUnique();
             builder.Property(p => p.Dni).IsRequired().HasMaxLength(10);
-            builder.Property(p => p.UserId).IsRequired();
-            builder.HasIndex(p => p.UserId).IsUnique();
 
         }
 

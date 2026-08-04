@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Dsw2026Tpi.Application.Services
 {
-    public class AppointmentService : IAppointmentService 
+    public class AppointmentService : IAppointmentService
     {
         private readonly IPersistence _persistence;
         private readonly ILogger<AppointmentService> _logger;
@@ -31,7 +31,7 @@ namespace Dsw2026Tpi.Application.Services
                 request.DoctorId, request.AvailabilitySlotId);
 
             ValidateRequest(request);
-            string dniString = request.Patient.Dni.ToString();
+            //string dniString = request.Patient.Dni.ToString();
 
             var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId);
 
@@ -67,7 +67,7 @@ namespace Dsw2026Tpi.Application.Services
             var patient = await _persistence.First<Patient>(p => p.Dni == dniString);
             if (patient == null)
 
-            _logger.LogWarning("Paciente con DNI {PatientDni} no encontrado al intentar reservar el slot {SlotId}.", dniString, slot.Id);
+                _logger.LogWarning("Paciente con DNI {PatientDni} no encontrado al intentar reservar el slot {SlotId}.", dniString, slot.Id);
             throw new ConflictException("PATIENT_NOT_FOUND", "El paciente no existe en el sistema.");
 
             var appointment = new Appointment
@@ -81,7 +81,7 @@ namespace Dsw2026Tpi.Application.Services
             slot.Status = SlotStatus.BOOKED;
 
             await _persistence.Add(appointment);
-            
+
             try
             {
                 await _persistence.Update(slot);
@@ -99,7 +99,7 @@ namespace Dsw2026Tpi.Application.Services
                 appointment.AvailabilitySlotId,
                 appointment.PatientId,
                 appointment.Reason,
-                appointment.Status.ToString(), 
+                appointment.Status.ToString(),
                 DateTime.Now
             );
         }
@@ -128,9 +128,9 @@ namespace Dsw2026Tpi.Application.Services
             if (request.Patient.Dni == 0)
             {
                 _logger.LogWarning("Validación fallida: El DNI del paciente fue enviado con valor 0.");
-                throw new ValidationException( "El DNI es obligatorio.", ErrorCodes.VALIDATION_ERROR);
+                throw new ValidationException("El DNI es obligatorio.", ErrorCodes.VALIDATION_ERROR);
             }
-                
+
             var dni = request.Patient.Dni.ToString();
 
             if (dni.Length < 7 || dni.Length > 10)
@@ -144,14 +144,14 @@ namespace Dsw2026Tpi.Application.Services
                 _logger.LogWarning("Validación fallida: El motivo de la cita está vacío o es nulo.");
                 throw new ValidationException("El motivo es obligatorio.", ErrorCodes.VALIDATION_ERROR);
             }
-                
+
 
             if (request.Reason.Trim().Length < 5)
             {
                 _logger.LogWarning("Validación fallida: El motivo ingresado es demasiado corto).");
                 throw new ValidationException("El motivo debe tener al menos 5 caracteres.", ErrorCodes.VALIDATION_ERROR);
             }
-                
+
         }
 
         public async Task<object> GetActiveAppointmentsByPatientAsync(long dni)
@@ -186,7 +186,7 @@ namespace Dsw2026Tpi.Application.Services
                 StartTime = a.AvailabilitySlot.StartTime,
                 Status = a.Status
             }).ToList();
-        }        
+        }
 
         public async Task CancelAppointmentAsync(Guid appointmentId)
         {
@@ -221,7 +221,7 @@ namespace Dsw2026Tpi.Application.Services
 
         public async Task<object> GetAppointmentsByDateAsync(string date)
         {
-            _logger.LogInformation("Consultando la grilla de turnos para la fecha: {RequestedDate}", date); 
+            _logger.LogInformation("Consultando la grilla de turnos para la fecha: {RequestedDate}", date);
 
             if (!DateTime.TryParse(date, out DateTime parsedDate))
             {

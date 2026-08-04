@@ -25,7 +25,7 @@ public class DoctorController : AppController
         return Ok(doctors);
     }
 
-    [HttpGet("{id}/availabilities")]
+    [HttpGet("{id:guid}/availabilities")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAvailabilities(Guid id)
@@ -51,7 +51,7 @@ public class DoctorController : AppController
         return Ok(createdDoctor);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(Guid id, [FromBody] DoctorModel.Request model)
@@ -64,7 +64,7 @@ public class DoctorController : AppController
         return Ok(updatedDoctor);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)

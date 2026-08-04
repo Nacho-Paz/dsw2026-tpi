@@ -4,8 +4,8 @@ using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Status;
 
 namespace Dsw2026Tpi.Data.Configurations
-{ 
-   public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
+{
+    public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
     {
         public void Configure(EntityTypeBuilder<Appointment> builder)
         {
@@ -23,7 +23,7 @@ namespace Dsw2026Tpi.Data.Configurations
             builder.Property(x => x.Status)
                    .HasMaxLength(20)
                    .IsRequired()
-                   .HasDefaultValue(AppointmentStatus.BOOKED); 
+                   .HasDefaultValue(AppointmentStatus.BOOKED);
 
             builder.Property(x => x.CancelledAt).IsRequired(false);
             builder.Property(x => x.AttendedAt).IsRequired(false);

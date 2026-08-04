@@ -30,7 +30,7 @@ namespace Dsw2026Tpi.Application.Services
             if (specialitiesList == null || !specialitiesList.Any())
             {
                 _logger.LogWarning("No se encontraron especialidades que coincidan con los criterios de búsqueda.");
-                throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
+                throw new EntityNotFoundException("Specialty");
             }
 
             var query = specialitiesList.ToList();
@@ -142,7 +142,7 @@ namespace Dsw2026Tpi.Application.Services
             if (existingEntity == null || existingEntity.IsDeleted)
             {
                 _logger.LogWarning("Especialidad con ID: {Id} no encontrada o ya eliminada.", id);
-                throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
+                throw new EntityNotFoundException("Specialty");
 
             }
 
