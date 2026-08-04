@@ -30,7 +30,7 @@ public static class PersistenceConfigurationExtensions
             options.UseSeeding((c, t) =>
             {
                 c.Seedwork<IdentityRole>("Sources\\roles.json");
-            });
+            }); //TODO: fijarse al iniciar
         });
         return services;
     }
