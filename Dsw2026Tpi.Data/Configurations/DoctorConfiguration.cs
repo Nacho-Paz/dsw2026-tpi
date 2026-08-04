@@ -13,6 +13,7 @@ public class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
         builder.HasKey(d => d.Id);
         builder.Property(d => d.Name).IsRequired().HasMaxLength(100);
         builder.Property(d => d.LicenseNumber).IsRequired().HasMaxLength(20);
+        builder.HasOne(d => d.Speciality).WithMany().HasForeignKey(d => d.SpecialityId);
 
     }
 }
