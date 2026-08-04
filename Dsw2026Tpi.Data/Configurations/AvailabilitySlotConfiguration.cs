@@ -4,6 +4,8 @@ using Dsw2026Tpi.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Dsw2026Tpi.Domain.Status;
+using Dsw2026Tpi.Domain.Enum;
 
 namespace Dsw2026Tpi.Data.Configurations
 {
@@ -23,7 +25,7 @@ namespace Dsw2026Tpi.Data.Configurations
             builder.Property(x => x.Status)
                    .HasMaxLength(20)
                    .IsRequired()
-                   .HasDefaultValue("AVAILABLE");
+                   .HasDefaultValue(SlotStatus.AVAILABLE);
 
             builder.Property(x => x.Deleted).HasDefaultValue(false);
 

@@ -2,12 +2,10 @@
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.Domain.Entities;
+using Dsw2026Tpi.Domain.Enum;
 using Dsw2026Tpi.Domain.Interfaces;
+using Dsw2026Tpi.Domain.Status;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Dsw2026Tpi.Application.Services
 {
@@ -20,15 +18,14 @@ namespace Dsw2026Tpi.Application.Services
         }
         public async Task<AppointmentModel.Response> CreateAppointmentAsync(AppointmentModel.Request request)
         {
+            ValidateRequest(request);
             string dniString = request.Patient.Dni.ToString();
-            if (dniString.Length < 7 || dniString.Length > 10)
-            {
-                throw new ValidationException("El DNI debe tener entre 7 y 10 dígitos.", "INVALID_DNI");
-            }
 
-            if (request.Reason.Length < 5)
+            var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId);
+
+            if (doctor == null)
             {
-                throw new ValidationException("El motivo debe tener al menos 5 caracteres.", "INVALID_REASON");
+                throw new EntityNotFoundException(nameof(Doctor));
             }
 
             var slot = await _persistence.First<AvailabilitySlot>(
@@ -41,13 +38,12 @@ namespace Dsw2026Tpi.Application.Services
                 throw new ConflictException("SLOT_NOT_FOUND", "El horario solicitado no existe o no corresponde a este médico.");
             }
 
-            if (slot.Status != "AVAILABLE")
+            if (slot.Status != SlotStatus.AVAILABLE)
             {
                 throw new ConflictException("SLOT_UNAVAILABLE", "El turno ya no se encuentra disponible.");
             }
 
-            var slotDateTime = slot.SlotDate.Add(slot.StartTime);
-            if (slotDateTime < DateTime.Now)
+            if (slot.SlotDate.Add(slot.StartTime) < DateTime.Now)
             {
                 throw new ConflictException("INVALID_DATE", "No se pueden reservar turnos pasados.");
             }
@@ -61,10 +57,10 @@ namespace Dsw2026Tpi.Application.Services
                 AvailabilitySlotId = slot.Id,
                 PatientId = patient.Id,
                 Reason = request.Reason,
-                Status = "BOOKED"
+                Status = AppointmentStatus.BOOKED
             };
 
-            slot.Status = "BOOKED";
+            slot.Status = SlotStatus.BOOKED;
 
             await _persistence.Add(appointment);
             
@@ -82,15 +78,42 @@ namespace Dsw2026Tpi.Application.Services
                 appointment.AvailabilitySlotId,
                 appointment.PatientId,
                 appointment.Reason,
-                appointment.Status,
+                appointment.Status, //TODO: revisar dto
                 DateTime.Now
             );
+        }
+
+        private static void ValidateRequest(AppointmentModel.Request request)
+        {
+            if (request == null) throw new ValidationException( 
+                "El cuerpo de la solicitud es obligatorio.","INVALID_REQUEST");
+
+            if (request.Patient == null) throw new ValidationException(
+                "El paciente es obligatorio.", "INVALID_PATIENT");
+
+            if (request.AvailabilitySlotId == Guid.Empty) throw new ValidationException(
+                "El availabilitySlotId es obligatorio.","INVALID_SLOT_ID");
+
+            if (request.Patient.Dni == 0) throw new ValidationException(
+                "El DNI es obligatorio.","INVALID_DNI");
+
+            var dni = request.Patient.Dni.ToString();
+
+            if (dni.Length < 7 || dni.Length > 10) throw new ValidationException(
+                "El DNI debe tener entre 7 y 10 dígitos.","INVALID_DNI");
+
+            if (string.IsNullOrWhiteSpace(request.Reason)) throw new ValidationException( 
+                "El motivo es obligatorio.", "INVALID_REASON");
+
+            if (request.Reason.Trim().Length < 5)
+                throw new ValidationException(
+                    "El motivo debe tener al menos 5 caracteres.", "INVALID_REASON");
         }
 
         public async Task<object> GetActiveAppointmentsByPatientAsync(long dni)
         {
             var activeAppointments = await _persistence.GetFiltered<Appointment>(
-                a => a.Patient.Dni == dni.ToString() && a.Status == "BOOKED",
+                a => a.Patient.Dni == dni.ToString() && a.Status == AppointmentStatus.BOOKED,
                 "AvailabilitySlot.AvailabilityRule.Doctor,Patient");
 
             var patient = await _persistence.First<Patient>(p => p.Dni == dni.ToString());
@@ -127,13 +150,13 @@ namespace Dsw2026Tpi.Application.Services
                 throw new ConflictException("APPOINTMENT_NOT_FOUND", "Turno no encontrado.");
             }
 
-            if (appointment.Status != "BOOKED")
+            if (appointment.Status != AppointmentStatus.BOOKED)
             {
                 throw new ConflictException("INVALID_STATUS", "Solo se pueden cancelar turnos que estén en estado BOOKED.");
             }
-            appointment.Status = "CANCELLED";
+            appointment.Status = AppointmentStatus.CANCELLED;
             appointment.CancelledAt = DateTime.Now;
-            appointment.AvailabilitySlot.Status = "AVAILABLE";
+            appointment.AvailabilitySlot.Status = SlotStatus.AVAILABLE;
 
             await _persistence.Update(appointment);
             await _persistence.Update(appointment.AvailabilitySlot);
@@ -199,10 +222,10 @@ namespace Dsw2026Tpi.Application.Services
 
             var data = pagedResult.Data.Select(a => new AppointmentModel.SearchItem(
                 AppointmentsId: a.Id,
-                AppointmentsStatus: a.Status,
+                AppointmentsStatus: a.Status, //TODO: revisar dto
                 Patient: new AppointmentModel.PatientInfo(
                     Dni: long.Parse(a.Patient?.Dni ?? "0"),
-                    FullName: a.Patient?.Nombre ?? ""),
+                    FullName: a.Patient?.FullName ?? ""),
                 Doctor: new AppointmentModel.DoctorInfo(
                     DoctorId: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Id ?? Guid.Empty,
                     Name: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Name ?? "",
