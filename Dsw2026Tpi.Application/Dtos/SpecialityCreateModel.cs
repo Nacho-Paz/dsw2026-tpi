@@ -16,3 +16,8 @@ namespace Dsw2026Tpi.Application.Dtos
         public String Description { get; set; } = string.Empty;
     }
 }
+<<<<<<< HEAD
+=======
+
+//TODO: BORRAR VALIDACIONES 
+>>>>>>> origin/feature/integration

@@ -1,5 +1,7 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
+using Dsw2026Tpi.CrossCutting.Exceptions;
+using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Interfaces;
 
@@ -15,8 +17,14 @@ public class DoctorService : IDoctorService
     }
 
     public async Task<Pagination<DoctorModel.Response>> GetAll(int pageSize, int pageIndex, string? name = null)
+
     {
-        var doctors = await _persistence.Paginate<Doctor, string>(
+        if (!string.IsNullOrWhiteSpace(name) && (name.Length < 3 || name.Length > 100))
+        {
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
+        }
+        
+            var doctors = await _persistence.Paginate<Doctor, string>(
             pageSize, 
             pageIndex,
            d => d.IsActive && (string.IsNullOrWhiteSpace(name) || d.Name.Contains(name)),
@@ -27,10 +35,13 @@ public class DoctorService : IDoctorService
             new DoctorModel.SpecialityDto(d.Speciality?.Id, d.Speciality?.Name)));
     }
 
-    async Task<List<DoctorModel.AvailabilityResponse>> GetDoctorAvailabilities(Guid doctorId)
+   public  async Task<List<DoctorModel.AvailabilityResponse>> GetDoctorAvailabilities(Guid doctorId)
     {
         var doctor= await _persistence.First<Doctor>(d => d.Id == doctorId && d.IsActive);
-        if (doctor == null) return null;
+        if (doctor == null)
+        {
+            throw new EntryPointNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
+        }
         var now= DateTime.Now;
         var rules = await _persistence.GetFiltered<AvailabilityRule>(
             r => r.DoctorId == doctorId && r.Month == now.Month && r.Year == now.Year && !r.Deleted,
@@ -49,12 +60,21 @@ public class DoctorService : IDoctorService
 
     }
 
-    async Task<DoctorModel.Response?> CreateDoctor(DoctorModel.Request model)
+   public async Task<DoctorModel.Response?> CreateDoctor(DoctorModel.Request model)
     {
+
+        if (string.IsNullOrWhiteSpace(model.Name))
+        {
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
+        }
+        if (model.Name.Length < 3 || model.Name.Length > 100)
+        {
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
+        }
         var speciality = await _persistence.First<Speciality>(s => s.Id == model.SpecialityId && !s.IsDeleted);
         if (speciality == null)
         {
-            return null;
+            throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
         }
 
         var newDoctor = new Doctor(model.Name, model.LicenseNumber, speciality);
@@ -70,19 +90,28 @@ public class DoctorService : IDoctorService
 
     }
 
-    async Task<DoctorModel.Response?> UpdateDoctor(Guid id, DoctorModel.Request model)
+   public async Task<DoctorModel.Response?> UpdateDoctor(Guid id, DoctorModel.Request model)
     {
         var existingEntity = await _persistence.First<Doctor>(d => d.Id == id && d.IsActive);
         if (existingEntity == null)
         {
-            return null;
-        }
+            throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
 
+        }
+        if (string.IsNullOrWhiteSpace(model.Name))
+        { 
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
+        }
+        if (model.Name.Length < 3 || model.Name.Length > 100)
+        {
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
+        }
         var speciality = await _persistence.First<Speciality>(s => s.Id == model.SpecialityId && !s.IsDeleted);
         if (speciality == null)
         {
-            return null;
+            throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
         }
+
 
         existingEntity.UpdateData(model.Name, model.LicenseNumber, speciality);
         await _persistence.Update(existingEntity);
@@ -95,13 +124,13 @@ public class DoctorService : IDoctorService
 
     }
 
-    async Task<bool> DeleteDoctor(Guid id)
+   public async Task<bool> DeleteDoctor(Guid id)
     {
 
         var existingEntity = await _persistence.First<Doctor>(d => d.Id == id && d.IsActive);
         if (existingEntity == null)
         {
-            return false;
+            throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
         }
 
         existingEntity.Deactivate();

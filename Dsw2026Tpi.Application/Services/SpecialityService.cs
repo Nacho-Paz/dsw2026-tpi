@@ -9,6 +9,7 @@ using System;
 
 
 using Dsw2026Tpi.CrossCutting.Exceptions;
+using Dsw2026Tpi.CrossCutting.Resources;
 
 namespace Dsw2026Tpi.Application.Services
 {
@@ -27,7 +28,7 @@ namespace Dsw2026Tpi.Application.Services
 
             if (specialitiesList == null || !specialitiesList.Any())
             {
-                throw new EntityNotFoundException("No specialities found.");
+                throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
             }
 
             var query = specialitiesList.ToList();
@@ -64,16 +65,15 @@ namespace Dsw2026Tpi.Application.Services
         public async Task<SpecialityModel> Createspeciality(SpecialityCreateModel model)
         {
             if (model.Name==null || model.Description == null){
-                throw new ValidationException(); //TODO: Add a message to the exception
-
+                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
             }
             if(model.Name.Length < 3 || model.Name.Length > 100)
             {
-                throw new ValidationException(); //TODO: Add a message to the exception
+                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
             }
             if (model.Description.Length < 10 || model.Description.Length > 100)
             {
-                throw new ValidationException(); //TODO: Add a message to the exception
+                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
             }
 
     
@@ -92,16 +92,15 @@ namespace Dsw2026Tpi.Application.Services
 
             if (model.Name == null || model.Description == null)
             {
-                throw new ValidationException(); //TODO: Add a message to the exception
-
+                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
             }
             if (model.Name.Length < 3 || model.Name.Length > 100)
             {
-                throw new ValidationException(); //TODO: Add a message to the exception
+                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);        
             }
             if (model.Description.Length < 10 || model.Description.Length > 100)
             {
-                throw new ValidationException(); //TODO: Add a message to the exception
+                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
             }
 
             var existingEntity = await _persistence.First<Speciality>(s => s.Id == id);
@@ -122,7 +121,11 @@ namespace Dsw2026Tpi.Application.Services
         {
      
             var existingEntity = await _persistence.First<Speciality>(s => s.Id == id);
-            if (existingEntity == null || existingEntity.IsDeleted) return false;
+            if (existingEntity == null || existingEntity.IsDeleted)
+            {
+                throw new EntityNotFoundException(nameof(ErrorCodes.ENTITY_NOTFOUND), ErrorCodes.ENTITY_NOTFOUND);
+
+            }
 
             existingEntity.Desactivate();
             await _persistence.Update(existingEntity);
