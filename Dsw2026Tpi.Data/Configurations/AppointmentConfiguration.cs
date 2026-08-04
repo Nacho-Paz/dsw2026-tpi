@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Status;
 
 namespace Dsw2026Tpi.Data.Configurations
-{
-    public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
+{ 
+   public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
     {
         public void Configure(EntityTypeBuilder<Appointment> builder)
         {

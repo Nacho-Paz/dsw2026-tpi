@@ -19,5 +19,7 @@ namespace Dsw2026Tpi.Domain.Entities
         public AvailabilityRule AvailabilityRule { get; set; }
         public Appointment Appointment { get; set; }
 
+
+
     }
 }
