@@ -1,21 +1,11 @@
-<<<<<<< HEAD
-﻿using System;
-=======
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Dsw2026Tpi.Domain.Entities;
 using System;
->>>>>>> origin/feature/integration
-using System.Collections.Generic;
-using System.Text;
 
 namespace Dsw2026Tpi.Data.Configurations
-{
-<<<<<<< HEAD
-    internal class AppointmentConfiguration
-    {
-=======
-    public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
+{ 
+   public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
     {
         public void Configure(EntityTypeBuilder<Appointment> builder)
         {
@@ -46,6 +36,5 @@ namespace Dsw2026Tpi.Data.Configurations
                    .HasForeignKey<Appointment>(x => x.AvailabilitySlotId);
         }
 
->>>>>>> origin/feature/integration
     }
 }

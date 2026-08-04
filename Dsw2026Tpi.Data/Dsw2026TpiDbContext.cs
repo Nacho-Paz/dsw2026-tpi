@@ -12,7 +12,7 @@ public class Dsw2026TpiDbContext: DbContext
     public DbSet<Speciality> Specialities { get; set; }
     public DbSet<Patient> Patients { get; set; } //crea nacho 
     public DbSet<Appointment> Appointments { get; set; }
-    public DbSet<AvailabilityRules> AvailabilityRules { get; set; }
+    public DbSet<AvailabilityRule> AvailabilityRules { get; set; }
     public DbSet<AvailabilitySlot> AvailabilitySlots {  get; set; }
 
 

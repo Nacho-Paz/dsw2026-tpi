@@ -23,6 +23,8 @@ namespace Dsw2026Tpi.Data.Configurations
                 builder.Property(x => x.EndTime).HasColumnType("time").IsRequired();
                 builder.Property(x => x.Deleted).HasDefaultValue(false);
 
+
+            //esta parte es posible que se borre, no es necesario crear un indice con un objeto anonimo 
                 builder.HasIndex(x => new { x.DoctorId, x.Year, x.Month, x.DayOfWeek, x.StartTime, x.EndTime })
                        .IsUnique()//TODO: revisar esto
                        .HasFilter("[Deleted] = 0")
