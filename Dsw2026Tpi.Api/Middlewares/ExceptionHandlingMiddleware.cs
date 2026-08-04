@@ -38,9 +38,10 @@ public class ExceptionHandlingMiddleware
         var status = ex switch
         {
             ValidationException => HttpStatusCode.BadRequest,
+            AuthenticationException => HttpStatusCode.Unauthorized,
+            AuthorizationException => HttpStatusCode.Forbidden,
             EntityNotFoundException => HttpStatusCode.NotFound,
-            ConflictException or AuthenticationException => HttpStatusCode.Conflict,
-            AuthorizationException => HttpStatusCode.Unauthorized,
+            ConflictException => HttpStatusCode.Conflict,
             _ => HttpStatusCode.InternalServerError,
         };
         var result = JsonSerializer.Serialize(error);
