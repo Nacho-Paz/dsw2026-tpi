@@ -26,6 +26,7 @@ public class Program
             builder.Services.AddSwaggerConfiguration();
             builder.Services.AddApplicationPersistence(builder.Configuration);
             builder.Services.AddAppCors(builder.Configuration);
+            builder.Services.AddAppRateLimiting(builder.Configuration);
             builder.Services.AddAppDependencies();
             builder.Services.AddControllers();
             builder.Services.AddHealthChecks();
@@ -46,6 +47,7 @@ public class Program
 
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseRateLimiter();
             app.UseCors();
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 

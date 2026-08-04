@@ -88,6 +88,15 @@ namespace Dsw2026Tpi.CrossCutting.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Muchas peticiones.
+        /// </summary>
+        public static string RATE_LIMIT_EXCEEDED {
+            get {
+                return ResourceManager.GetString("RATE_LIMIT_EXCEEDED", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Se produjo un error al registrar el usuario.
         /// </summary>
         public static string REGISTER_USER_CONFLICT {
