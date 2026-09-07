@@ -15,7 +15,7 @@ public class AuthenticationService : IAuthenticationService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ISignInService _signInManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly JwtService _jwtService;
     private readonly ILogger<AuthenticationService> _logger;
     private readonly IPatientService _petientService;
@@ -23,7 +23,7 @@ public class AuthenticationService : IAuthenticationService
     public AuthenticationService(
         UserManager<ApplicationUser> userManager,
         ISignInService signInManager,
-        RoleManager<IdentityRole> roleManager,
+        RoleManager<ApplicationRole> roleManager,
         JwtService jwtService,
         ILogger<AuthenticationService> logger,
         IPatientService patientService)
@@ -144,7 +144,7 @@ public class AuthenticationService : IAuthenticationService
                 }
             }
 
-            var patientToService = new Patient(Guid.Parse(user.Id), Convert.ToString(request.Dni));
+            var patientToService = new Patient(user.Id, Convert.ToString(request.Dni));
 
             _logger.LogInformation("Entidad paciente registrada: {Dni}",request.Dni);
         }

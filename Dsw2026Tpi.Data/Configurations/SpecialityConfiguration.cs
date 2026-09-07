@@ -10,11 +10,10 @@ public class SpecialityConfiguration : IEntityTypeConfiguration<Specialty>
     {
         builder.ToTable("Specialities");
 
-        builder.HasKey(s => s.Id);
-        builder.Property(s => s.Name).IsRequired().HasMaxLength(100);
-        builder.HasIndex(s => s.Name).IsUnique();
-        builder.Property(s => s.Description).HasMaxLength(100);
-
-
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Name).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.Description).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.IsDeleted).IsRequired().HasDefaultValue(false);
+        builder.HasIndex(x => x.Name).IsUnique();
     }
 }

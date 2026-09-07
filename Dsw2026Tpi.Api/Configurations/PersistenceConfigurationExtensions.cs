@@ -17,11 +17,11 @@ public static class PersistenceConfigurationExtensions
         services.AddDbContext<Dsw2026TpiDbContext>(options =>
         {
             options.UseSqlServer(connectionString);
-            options.UseSeeding((c, _) =>
-            {
-                c.Seedwork<Specialty>("Sources\\specialities.json");
-                c.Seedwork<Doctor>("Sources\\doctors.json");
-            });
+            //options.UseSeeding((c, _) =>
+            //{
+            //    c.Seedwork<Specialty>("Sources\\specialities.json");
+            //    c.Seedwork<Doctor>("Sources\\doctors.json");
+            //});
         });
 
         services.AddDbContext<AuthenticationDbContext>(options =>
@@ -29,7 +29,7 @@ public static class PersistenceConfigurationExtensions
             options.UseSqlServer(connectionString);
             options.UseSeeding((c, t) =>
             {
-                c.Seedwork<IdentityRole>("Sources\\roles.json");
+                c.Seedwork<ApplicationRole>("Sources\\roles.json");
             }); //TODO: fijarse al iniciar
         });
         return services;

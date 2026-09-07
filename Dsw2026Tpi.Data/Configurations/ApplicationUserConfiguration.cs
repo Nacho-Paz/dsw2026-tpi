@@ -8,12 +8,11 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
 {
     public void Configure(EntityTypeBuilder<ApplicationUser> builder)
     {
-        builder.ToTable("ApplicationUsers");
+        //builder.ToTable("ApplicationUsers");
 
-        builder.Property(x => x.Deleted).IsRequired();
-
+        builder.Property(x => x.Deleted).IsRequired().HasDefaultValue(false);
         builder.Property(x => x.CreatedAt).IsRequired();
-
         builder.Property(x => x.UpdatedAt).IsRequired();
+        builder.HasIndex(x => x.Email).IsUnique();
     }
 }
