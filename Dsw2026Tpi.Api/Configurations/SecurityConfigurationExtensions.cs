@@ -108,7 +108,7 @@ public static class SecurityConfigurationExtensions
             options.User.RequireUniqueEmail = true;
             options.SignIn.RequireConfirmedAccount = false;
 
-        }).AddRoles<IdentityRole>()
+        }).AddRoles<ApplicationRole>()
           .AddEntityFrameworkStores<AuthenticationDbContext>()
           .AddSignInManager()
           .AddDefaultTokenProviders();

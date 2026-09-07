@@ -2,9 +2,10 @@
 
 public class Specialty: EntityBase
 {
-    public string Name { get; set; }
-    public string Description { get; set; }
-    public bool IsDeleted { get; private set; } 
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public bool IsDeleted { get; private set; }
+    public ICollection<Doctor> Doctors { get; private set; } = new List<Doctor>();
 
     #region Constructor for EF
 #pragma warning disable CS8618
@@ -16,6 +17,7 @@ public class Specialty: EntityBase
     {
         Name = name;
         Description = description;
+        IsDeleted = false;
     }
 
     public void Desactivate()

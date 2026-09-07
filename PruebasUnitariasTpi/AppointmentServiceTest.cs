@@ -31,13 +31,7 @@ namespace PruebasUnitariasTPI
                 Status = SlotStatus.BOOKED
             };
 
-            var turnoSimulado = new Appointment
-            {
-                Id = appointmentId,
-                Status = AppointmentStatus.BOOKED,
-                AvailabilitySlotId = slotSimulado.Id,
-                AvailabilitySlot = slotSimulado
-            };
+            var turnoSimulado = new Appointment(appointmentId,slotSimulado.Id,null);
 
             _mockPersistence
                 .First(Arg.Any<Expression<Func<Appointment, bool>>>(), Arg.Any<string>())

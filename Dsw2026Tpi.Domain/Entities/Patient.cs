@@ -2,11 +2,10 @@
 
 public class Patient : EntityBase
 {
-    public string Dni { get; set; }
+    public string Dni { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
-    public bool Deleted { get; set; } = false;
-    public DateTime CreatedAtPatient { get; init; } = DateTime.UtcNow;
+    public bool Deleted { get; set; }
     public ICollection<Appointment> Appointments { get; set; } = [];
     public Guid UserId { get; private set; }
 
@@ -23,5 +22,6 @@ public class Patient : EntityBase
         UserId = userId;
         Dni = dni;
         CreatedAt = DateTime.UtcNow;
+        Deleted = false;
     }
 }

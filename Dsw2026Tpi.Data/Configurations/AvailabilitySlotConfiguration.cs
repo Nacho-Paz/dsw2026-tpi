@@ -1,28 +1,45 @@
-﻿using System;
+﻿using Dsw2026Tpi.Domain.Entities;
+using Dsw2026Tpi.Domain.Enum;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Dsw2026Tpi.Domain.Entities;
-using System.Collections.Generic;
-using System.Text;
-using Dsw2026Tpi.Domain.Status;
-using Dsw2026Tpi.Domain.Enum;
 
-namespace Dsw2026Tpi.Data.Configurations
+namespace Dsw2026Tpi.Data.Configurations;
+
+internal class AvailabilitySlotConfiguration : IEntityTypeConfiguration<AvailabilitySlot>
 {
-    internal class AvailabilitySlotConfiguration : IEntityTypeConfiguration<AvailabilitySlot>
+    public void Configure(EntityTypeBuilder<AvailabilitySlot> builder)
     {
-        public void Configure(EntityTypeBuilder<AvailabilitySlot> builder)
+        builder.ToTable("AvailabilitySlots");
+        builder.HasKey(a => a.Id);
+        builder.Property(x => x.AvailabilityRuleId).IsRequired();
+        builder.Property(s => s.SlotDate).IsRequired();
+        builder.Property(a => a.StartTime).HasColumnType("time").IsRequired();
+        builder.Property(a => a.EndTime).HasColumnType("time").IsRequired();
+        builder.Property(a => a.Status)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(SlotStatus.AVAILABLE)
+            .IsRequired();
+        builder.Property(x => x.Deleted).IsRequired().HasDefaultValue(false);
+        builder.Property(x => x.RowVersion).IsRowVersion().IsConcurrencyToken();
+
+        // AvailabilityRule 1 → N AvailabilitySlot
+        builder.HasOne(x => x.AvailabilityRule)
+            .WithMany(x => x.Slots)
+            .HasForeignKey(x => x.AvailabilityRuleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // No puede existir el mismo slot dos veces
+        builder.HasIndex(x => new
         {
-            builder.ToTable("AvailabilitySlots");
-            builder.HasKey(a => a.Id);
-            builder.Property(a => a.Status).HasConversion<string>().HasMaxLength(20);
-            builder.Property(a => a.StartTime).IsRequired();
-            builder.Property(s => s.SlotDate).IsRequired();
-            builder.Property(a => a.EndTime).IsRequired();
-            builder.HasOne(a => a.AvailabilityRule).WithMany(a => a.Slots).HasForeignKey(a => a.AvailabilityRuleId).OnDelete(DeleteBehavior.Cascade);
-            builder.HasIndex(x => new { x.AvailabilityRuleId, x.SlotDate, x.StartTime });
-            builder.Property(x => x.Deleted).HasDefaultValue(false);
-            builder.Property(x => x.RowVersion).IsRowVersion();
-        }
+            x.AvailabilityRuleId,
+            x.SlotDate,
+            x.StartTime
+        })
+        .IsUnique();
+
+        builder.ToTable(t => t.HasCheckConstraint(
+            "CK_AvailabilitySlot_Start_End",
+            "[StartTime] < [EndTime]"));
     }
 }

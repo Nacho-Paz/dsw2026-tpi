@@ -2,11 +2,14 @@
 
 public class Doctor: EntityBase
 {
-    public string Name { get; private set; }
-    public string LicenseNumber { get; private set; }
+    public string Name { get; private set; } = string.Empty;
+    public string LicenseNumber { get; private set; } = string.Empty;
     public bool IsActive { get; private set; }
-    public Guid? SpecialityId { get; set; }
-    public Specialty? Speciality { get; private set; }
+    public Guid SpecialityId { get; set; }
+    public Specialty Speciality { get; private set; } = null!;
+
+    public ICollection<AvailabilityRule> AvailabilityRules
+    { get; private set; } = new List<AvailabilityRule>();
 
     #region Constructor for EF
 #pragma warning disable CS8618
