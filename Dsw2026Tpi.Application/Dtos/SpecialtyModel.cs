@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Dsw2026Tpi.Application.Dtos
+﻿namespace Dsw2026Tpi.Application.Dtos
 {
-    public class SpecialityModel
+    public class SpecialtyModel
     {
         public Guid Id { get; set; }
         public String Name { get; set; } = string.Empty;

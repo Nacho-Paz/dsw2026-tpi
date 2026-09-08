@@ -13,6 +13,7 @@ public static class SwaggerConfigurationExtensions
             {
                 Title = "Desarollo de Software 2026",
                 Version = "v1",
+                Description = "SISTEMA DE TURNOS MÉDICOS",
             });
             o.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
             {

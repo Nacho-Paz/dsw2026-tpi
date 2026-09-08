@@ -9,7 +9,7 @@ using System;
 
 namespace Dsw2026Tpi.Application.Services
 {
-    public class SpecialityService : ISpecialityService
+    public class SpecialityService : ISpecialtyService
     {
         private readonly IPersistence _persistence;
         public SpecialityService(IPersistence _persistence)
@@ -17,19 +17,19 @@ namespace Dsw2026Tpi.Application.Services
             _persistence = _persistence;
         }
                     
-        public async Task< Pagination<SpecialityModel>>GetSpecialities(SpecialityQueryFilter filter)
+        public async Task< Pagination<SpecialtyModel>>GetSpecialties(SpecialtyQueryFilter filter)
         {
-            var specialitiesList = await _persistence.GetFiltered<Speciality>(
+            var specialitiesList = await _persistence.GetFiltered<Specialty>(
                 s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name))); ;
-          
-          
-            var query = specialitiesList.ToList()
+
+
+            var query = specialitiesList.ToList();
 
 
             var totalRecords =query.Count();
             if (totalRecords == 0)
             {
-                return Pagination<SpecialityModel>.Empty;
+                return Pagination<SpecialtyModel>.Empty;
             }
 
             var pagedData = query
@@ -37,7 +37,7 @@ namespace Dsw2026Tpi.Application.Services
                 .Take(filter.PageSize)
                 .ToList();
 
-            var paginationResult = new Pagination<Speciality>(
+            var paginationResult = new Pagination<Specialty>(
                 filter.PageSize,
                 filter.PageIndex,
                 totalRecords,
@@ -45,7 +45,7 @@ namespace Dsw2026Tpi.Application.Services
 
                 );
 
-            return paginationResult.Map(s => new SpecialityModel
+            return paginationResult.Map(s => new SpecialtyModel
             {
                 Id = s.Id,
                 Name = s.Name,
@@ -54,11 +54,11 @@ namespace Dsw2026Tpi.Application.Services
 
         }
 
-        public async Task<SpecialityModel> Createspeciality(SpecialityCreateModel model)
+        public async Task<SpecialtyModel> Createspecialty(SpecialtyCreateModel model)
         {
-            var newSpeciality = new Speciality(model.Name, model.Description);
+            var newSpeciality = new Specialty(model.Name, model.Description);
             await _persistence.Add(newSpeciality);
-            return new SpecialityModel
+            return new SpecialtyModel
             {
                 Id = newSpeciality.Id,
                 Name = newSpeciality.Name,
@@ -66,28 +66,28 @@ namespace Dsw2026Tpi.Application.Services
             };
 
         }
-        public async Task<SpecialityModel>UpdateSpeciality(Guid id, SpecialityCreateModel model)
+        public async Task<SpecialtyModel>UpdateSpecialty(Guid id, SpecialtyCreateModel model)
         {
-            var existingEntity = await _persistence.First<Speciality>(s => s.Id == id);
+            var existingEntity = await _persistence.First<Specialty>(s => s.Id == id);
             if (existingEntity == null || existingEntity.IsDeleted) return null;
 
             existingEntity.Name = model.Name;
             existingEntity.Description = model.Description;
 
             await _persistence.Update(existingEntity);
-            return new SpecialityModel
+            return new SpecialtyModel
             {
                 Id = existingEntity.Id,
                 Name = existingEntity.Name,
                 Description = existingEntity.Description
             };
         }
-        public async Task <bool> DeleteSpeciality(Guid id)
+        public async Task <bool> DeleteSpecialty(Guid id)
         {
-            var existingEntity = await _persistence.First<Speciality>(s => s.Id == id);
+            var existingEntity = await _persistence.First<Specialty>(s => s.Id == id);
             if (existingEntity == null || existingEntity.IsDeleted) return false;
 
-            existingEntity.desactivate();
+            //existingEntity.desactivate(); TODO: Ver que onda esto
             await _persistence.Update(existingEntity);
             return true;
         }
