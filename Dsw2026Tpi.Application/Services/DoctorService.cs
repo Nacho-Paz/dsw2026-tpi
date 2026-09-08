@@ -63,7 +63,6 @@ public class DoctorService : IDoctorService
             r.EndTime.ToString(@"hh\:mm"))).ToList();
 
     }
-    //ME SIGUE LANXANDO 500 CUANDO CREO
 
     public async Task<DoctorModel.Response?> CreateDoctor(DoctorModel.Request model)
     {
@@ -84,6 +83,15 @@ public class DoctorService : IDoctorService
         {
             _logger.LogWarning("Especialidad con ID {SpecialityId} no encontrada al crear médico.", model.SpecialityId);
             throw new EntityNotFoundException("Doctor");
+        }
+
+       //NO TERMINE DEBO VERIFICAR SI SE CREA
+        var existingLicense = await _persistence.First<Doctor>(d => d.LicenseNumber == model.LicenseNumber);
+        if (existingLicense != null)
+        {
+            _logger.LogWarning("Intento de creación fallido: La matrícula {LicenseNumber} ya existe.", model.LicenseNumber);
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR)
+                .WithDetail("LicenseNumber", "Ya existe un médico registrado con esta matrícula.");
         }
 
         var newDoctor = new Doctor(model.Name, model.LicenseNumber, speciality);
