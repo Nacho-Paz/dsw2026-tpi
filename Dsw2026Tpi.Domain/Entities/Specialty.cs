@@ -1,9 +1,9 @@
 ﻿namespace Dsw2026Tpi.Domain.Entities;
 
-public class Specialty: EntityBase
+public class Specialty : EntityBase
 {
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
+    public string Name { get; private set; } = string.Empty;
+    public string Description { get; private set; } = string.Empty;
     public bool IsDeleted { get; private set; }
     public ICollection<Doctor> Doctors { get; private set; } = new List<Doctor>();
 
@@ -18,6 +18,12 @@ public class Specialty: EntityBase
         Name = name;
         Description = description;
         IsDeleted = false;
+    }
+
+    public void Update(string name, string description)
+    {
+        Name = name;
+        Description = description;
     }
 
     public void Desactivate()
