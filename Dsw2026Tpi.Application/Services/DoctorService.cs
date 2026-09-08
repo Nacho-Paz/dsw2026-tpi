@@ -63,6 +63,7 @@ public class DoctorService : IDoctorService
             r.EndTime.ToString(@"hh\:mm"))).ToList();
 
     }
+    //ME SIGUE LANXANDO 500 CUANDO CREO
 
     public async Task<DoctorModel.Response?> CreateDoctor(DoctorModel.Request model)
     {

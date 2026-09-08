@@ -64,6 +64,7 @@ namespace Dsw2026Tpi.Application.Services
 
         }
 
+        ///FUNCIONA BIEN//
         public async Task<SpecialtyModel> Createspecialty(SpecialtyCreateModel model)
 
         {
