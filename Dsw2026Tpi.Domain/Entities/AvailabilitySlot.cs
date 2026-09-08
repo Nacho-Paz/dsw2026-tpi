@@ -21,5 +21,4 @@ public class AvailabilitySlot : EntityBase
     }
 #pragma warning restore CS8618
     #endregion
-
 }

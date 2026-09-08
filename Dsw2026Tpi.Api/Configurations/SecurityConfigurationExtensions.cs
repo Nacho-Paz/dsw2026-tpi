@@ -57,12 +57,12 @@ public static class SecurityConfigurationExtensions
     {
         //Obtener configuración para CORS desde appsettings.json
         var allowedOrigins = configuration
-                            .GetSection("Cors:AllowedOrigins")
-                            .Get<string[]>()?
-                            .Where(origin => !string.IsNullOrWhiteSpace(origin))
-                            .Select(origin => origin.TrimEnd('/'))
-                            .Distinct(StringComparer.OrdinalIgnoreCase)
-                            .ToArray();
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>()?
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Select(origin => origin.TrimEnd('/'))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
         //Si no se definió configuración en el archivo, utilizar la que se define
         if (allowedOrigins is null || allowedOrigins.Length == 0)
@@ -80,9 +80,9 @@ public static class SecurityConfigurationExtensions
             options.AddDefaultPolicy(policy =>
             {
                 policy.WithOrigins(allowedOrigins)
-                     .AllowAnyHeader()
-                     .AllowAnyMethod()
-                     .AllowCredentials();
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
             });
         });
 
@@ -109,9 +109,9 @@ public static class SecurityConfigurationExtensions
             options.SignIn.RequireConfirmedAccount = false;
 
         }).AddRoles<ApplicationRole>()
-          .AddEntityFrameworkStores<AuthenticationDbContext>()
-          .AddSignInManager()
-          .AddDefaultTokenProviders();
+        .AddEntityFrameworkStores<AuthenticationDbContext>()
+        .AddSignInManager()
+        .AddDefaultTokenProviders();
         return services;
     }
 }

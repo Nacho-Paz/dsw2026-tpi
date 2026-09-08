@@ -19,5 +19,4 @@ public class AvailabilityRule : EntityBase
     }
 #pragma warning restore CS8618
     #endregion
-
 }

@@ -26,8 +26,5 @@ public class Specialty : EntityBase
         Description = description;
     }
 
-    public void Desactivate()
-    {
-        IsDeleted = true;
-    }
+    public void Desactivate() => IsDeleted = true;
 }

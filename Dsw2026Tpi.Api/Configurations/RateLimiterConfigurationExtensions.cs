@@ -52,14 +52,13 @@ public static class RateLimiterConfigurationExtensions
 
                 context.HttpContext.Response.ContentType = "application/json";
 
-                await context.HttpContext.Response.WriteAsJsonAsync(error,cancellationToken);
+                await context.HttpContext.Response.WriteAsJsonAsync(error, cancellationToken);
             };
 
             // 5 solicitudes/minuto por IP
             options.AddPolicy("AdminLogin", httpContext =>
             {
-                var partitionKey =
-                    $"ip:{httpContext.Connection.RemoteIpAddress}";
+                var partitionKey = $"ip:{httpContext.Connection.RemoteIpAddress}";
 
                 return RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey,
@@ -74,8 +73,7 @@ public static class RateLimiterConfigurationExtensions
             // 10 solicitudes/minuto por IP
             options.AddPolicy("PatientLogin", httpContext =>
             {
-                var partitionKey =
-                    $"ip:{httpContext.Connection.RemoteIpAddress}";
+                var partitionKey = $"ip:{httpContext.Connection.RemoteIpAddress}";
 
                 return RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey,

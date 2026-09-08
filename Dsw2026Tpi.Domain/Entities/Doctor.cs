@@ -1,6 +1,6 @@
 ﻿namespace Dsw2026Tpi.Domain.Entities;
 
-public class Doctor: EntityBase
+public class Doctor : EntityBase
 {
     public string Name { get; private set; } = string.Empty;
     public string LicenseNumber { get; private set; } = string.Empty;
@@ -33,9 +33,5 @@ public class Doctor: EntityBase
         Speciality = speciality;
     }
 
-    public void Deactivate()
-    {
-        IsActive = false;
-    }
-   
+    public void Deactivate() => IsActive = false;
 }

@@ -8,7 +8,7 @@ public class Dsw2026TpiDbContext : DbContext
 {
     public DbSet<Doctor> Doctors { get; set; }
     public DbSet<Specialty> Specialities { get; set; }
-    public DbSet<Patient> Patients { get; set; } 
+    public DbSet<Patient> Patients { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<AvailabilityRule> AvailabilityRules { get; set; }
     public DbSet<AvailabilitySlot> AvailabilitySlots { get; set; }

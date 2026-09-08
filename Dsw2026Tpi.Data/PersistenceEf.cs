@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 
 namespace Dsw2026Tpi.Data;
 
-public class PersistenceEf: IPersistence
+public class PersistenceEf : IPersistence
 {
     private readonly Dsw2026TpiDbContext _context;
 
@@ -62,12 +62,12 @@ public class PersistenceEf: IPersistence
         pageIndex = Math.Abs(pageIndex) == 0 ? 0 : Math.Abs(pageIndex) - 1;
 
         var filtered = Include(_context.Set<T>(), includes)
-                 .Where(predicate)
-                 .OrderBy(sortOrder);
+            .Where(predicate)
+            .OrderBy(sortOrder);
 
         var total = await filtered.CountAsync();
 
-        
+
         async Task<Pagination<T>> GetPage(int skip, int take)
         {
             var data = await filtered.Skip(skip)
@@ -76,27 +76,18 @@ public class PersistenceEf: IPersistence
 
             return new Pagination<T>(pageSize, pageIndex, total, data);
         }
-        
+
         //la pagina existe
-        if (total > pageSize * pageIndex)
-        {
-            return await GetPage(pageIndex * pageSize, pageSize);
-        }
+        if (total > pageSize * pageIndex) return await GetPage(pageIndex * pageSize, pageSize);
 
         //solo hay una pagina
-        if (total < pageSize)
-        {
-            return new Pagination<T>(pageSize, pageIndex, total, await filtered.ToListAsync());
-        }
+        if (total < pageSize) return new Pagination<T>(pageSize, pageIndex, total, await filtered.ToListAsync());
 
         var targetPageIndex = pageIndex - 1;
 
         while (true)
         {
-            if (total > targetPageIndex * pageSize)
-            {
-                return await GetPage(targetPageIndex * pageSize, pageSize);
-            }
+            if (total > targetPageIndex * pageSize) return await GetPage(targetPageIndex * pageSize, pageSize);
 
             targetPageIndex--;
 
@@ -108,10 +99,8 @@ public class PersistenceEf: IPersistence
     {
         var includedQuery = query;
 
-        foreach (var include in includes)
-        {
-            includedQuery = includedQuery.Include(include);
-        }
+        foreach (var include in includes) includedQuery = includedQuery.Include(include);
+
         return includedQuery;
     }
 }

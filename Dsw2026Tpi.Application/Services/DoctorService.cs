@@ -85,7 +85,7 @@ public class DoctorService : IDoctorService
             throw new EntityNotFoundException("Doctor");
         }
 
-       //NO TERMINE DEBO VERIFICAR SI SE CREA
+        //NO TERMINE DEBO VERIFICAR SI SE CREA
         var existingLicense = await _persistence.First<Doctor>(d => d.LicenseNumber == model.LicenseNumber);
         if (existingLicense != null)
         {
@@ -103,9 +103,6 @@ public class DoctorService : IDoctorService
             newDoctor.Name,
             newDoctor.LicenseNumber,
             new DoctorModel.SpecialityDto(speciality.Id, speciality.Name));
-
-
-
     }
 
     public async Task<DoctorModel.Response?> UpdateDoctor(Guid id, DoctorModel.Request model)
@@ -115,10 +112,8 @@ public class DoctorService : IDoctorService
         if (existingEntity == null)
         {
             _logger.LogWarning("No se encontró el médico con ID {DoctorId} para actualizar.", id);
-
             throw new EntityNotFoundException("Doctor");
         }
-
         if (string.IsNullOrWhiteSpace(model.Name))
         {
             _logger.LogWarning("Validación fallida: El nombre del médico es nulo o vacío para el ID {DoctorId}.", id);
@@ -127,7 +122,6 @@ public class DoctorService : IDoctorService
         if (model.Name.Length < 3 || model.Name.Length > 100)
         {
             _logger.LogWarning("Validación fallida: La longitud del nombre no es válida para el ID {DoctorId}.", id);
-
             throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
         }
         var speciality = await _persistence.First<Specialty>(s => s.Id == model.SpecialityId && !s.IsDeleted);
@@ -137,7 +131,6 @@ public class DoctorService : IDoctorService
             throw new EntityNotFoundException("Doctor");
         }
 
-
         existingEntity.UpdateData(model.Name, model.LicenseNumber, speciality);
         await _persistence.Update(existingEntity);
         _logger.LogInformation("Médico con ID {DoctorId} actualizado exitosamente.", id);
@@ -146,7 +139,6 @@ public class DoctorService : IDoctorService
             existingEntity.Name,
             existingEntity.LicenseNumber,
             new DoctorModel.SpecialityDto(speciality.Id, speciality.Name));
-
     }
 
     public async Task<bool> DeleteDoctor(Guid id)
@@ -165,8 +157,6 @@ public class DoctorService : IDoctorService
         _logger.LogInformation("Médico con ID {DoctorId} desactivado exitosamente.", id);
         return true;
     }
-
-
 }
 
 
