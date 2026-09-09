@@ -21,16 +21,16 @@ namespace Dsw2026Tpi.Application.Services
         public async Task<Pagination<SpecialtyModel>> GetSpecialties(SpecialtyQueryFilter filter)
 
         {
-            var specialitiesList = await _persistence.GetFiltered<Specialty>(
+            var specialtiesList = await _persistence.GetFiltered<Specialty>(
                 s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name)));
 
-            if (specialitiesList == null || !specialitiesList.Any())
+            if (specialtiesList == null || !specialtiesList.Any())
             {
                 _logger.LogWarning("No se encontraron especialidades que coincidan con los criterios de búsqueda.");
                 throw new EntityNotFoundException("Specialty");
             }
 
-            var query = specialitiesList.ToList();
+            var query = specialtiesList.ToList();
 
             var totalRecords = query.Count();
             if (totalRecords == 0) return Pagination<SpecialtyModel>.Empty;
