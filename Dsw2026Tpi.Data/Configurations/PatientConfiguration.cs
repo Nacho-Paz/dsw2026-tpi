@@ -19,5 +19,4 @@ internal class PatientConfiguration : IEntityTypeConfiguration<Patient>
         builder.Property(p => p.Phone).HasMaxLength(30);
         builder.Property(x => x.Deleted).IsRequired().HasDefaultValue(false);
     }
-
 }

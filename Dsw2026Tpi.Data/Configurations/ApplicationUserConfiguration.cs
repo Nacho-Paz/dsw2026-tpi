@@ -14,5 +14,6 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired();
         builder.HasIndex(x => x.Email).IsUnique();
+        //Al hacer esto también incluto que el email no se repita aún cuando el usuario tiene Deleted=true
     }
 }
