@@ -17,7 +17,12 @@ public class PatientService : IPatientService
     }
     public async Task<Patient?> GetByDni(string dni)
     {
-        return await _persistence.First<Patient>(p => p.Dni == dni);
+        return await _persistence.First<Patient>(p => p.Dni == dni && !p.Deleted);
+    }
+
+    public async Task<Patient?> GetByUserId(Guid userId)
+    {
+        return await _persistence.First<Patient>(p => p.UserId == userId && !p.Deleted);
     }
 
     public async Task CreatePatient(Guid UserId, string dni)
@@ -25,5 +30,4 @@ public class PatientService : IPatientService
         var p = new Patient(UserId, dni);
         await _persistence.Add(p);
     }
-
 }

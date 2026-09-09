@@ -53,7 +53,6 @@ public class AuthenticationController : AppController
         [FromBody] LoginPatientModel.Request request)
     {
         var result = await _authenticationService.LoginPatient(request);
-
         return Ok(result);
     }
 }

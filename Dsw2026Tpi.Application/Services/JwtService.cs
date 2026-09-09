@@ -14,30 +14,43 @@ public class JwtService
         _config = config;
     }
 
-    public string GenerateToken(string username, string? role)
+    public string GenerateToken(Guid userId, string username, string? role)
     {
-        if (_config == null) throw new ArgumentNullException();
+        if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("Username is required.", nameof(username));
+        if (string.IsNullOrWhiteSpace(role)) throw new ArgumentException("Role is required.", nameof(role));
+
         var jwtConfig = _config.GetSection("Jwt");
-        var keyText = jwtConfig["Key"] ?? throw new ArgumentNullException("Jwt Key");
-        var issuer = jwtConfig["Issuer"] ?? throw new ArgumentNullException("Jwt Issuer");
-        var audience = jwtConfig["Audience"] ?? throw new ArgumentNullException("Jwt Audience");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyText));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var keyText = jwtConfig["Key"];
+        if (string.IsNullOrWhiteSpace(keyText)) throw new InvalidOperationException("JWT Key is not configured.");
+
+        var issuer = jwtConfig["Issuer"];
+        if (string.IsNullOrWhiteSpace(issuer)) throw new InvalidOperationException("JWT Issuer is not configured.");
+
+        var audience = jwtConfig["Audience"];
+        if (string.IsNullOrWhiteSpace(audience)) throw new InvalidOperationException("JWT Audience is not configured.");
+        
         var expiresIn = int.Parse(jwtConfig["ExpiresInMinutes"] ?? "60");
 
-        var claims = new[]
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyText));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, username),
+            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Name, username),
-            new Claim(ClaimTypes.Role, role ?? string.Empty)
+            new Claim(ClaimTypes.Role, role)
         };
+
+        var expires = DateTime.UtcNow.AddMinutes(expiresIn);
 
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.Now.AddMinutes(expiresIn),
-            signingCredentials: creds
+            expires: expires,
+            signingCredentials: credentials
             );
 
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
