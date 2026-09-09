@@ -112,8 +112,7 @@ namespace Dsw2026Tpi.Application.Services
             var existingEntity = await _persistence.First<Specialty>(s => s.Id == id);
             if (existingEntity == null || existingEntity.IsDeleted) return null;
 
-            existingEntity.Name = model.Name; //TODO: Ver esto
-            existingEntity.Description = model.Description; //TODO: Ver esto
+            existingEntity.Update(model.Name, model.Description);
 
             await _persistence.Update(existingEntity);
             _logger.LogInformation("Especialidad con ID: {Id} actualizada exitosamente.", id);
