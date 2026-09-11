@@ -20,9 +20,6 @@ public class AvailabilitiesController : ControllerBase
     }
 
     [HttpPost]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-    //[ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateAvailabilities([FromBody] AvailabilityModel.Request request)
     {
         var result = await _availabilityService.CreateAvailabilitiesAsync(request);
@@ -30,9 +27,6 @@ public class AvailabilitiesController : ControllerBase
     }
 
     [HttpPut]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-    //[ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateAvailabilities([FromBody] AvailabilityModel.Request request)
     {
         var result = await _availabilityService.UpdateAvailabilitiesAsync(request);
