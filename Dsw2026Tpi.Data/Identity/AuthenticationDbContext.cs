@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dsw2026Tpi.Data.Identity;
 
+//CHECK: Ready
 public class AuthenticationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
 {
     public AuthenticationDbContext(DbContextOptions<AuthenticationDbContext> options)
