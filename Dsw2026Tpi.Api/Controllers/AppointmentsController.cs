@@ -23,12 +23,6 @@ public class AppointmentsController : ControllerBase
     [HttpPost]
     [Authorize(Roles = Roles.Patient)]
     [EnableRateLimiting("PatientBooking")]
-    //[ProducesResponseType(StatusCodes.Status201Created)]
-    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-    //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    //[ProducesResponseType(StatusCodes.Status403Forbidden)]
-    //[ProducesResponseType(StatusCodes.Status409Conflict)]
-    //[ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Create([FromBody] AppointmentModel.Request request)
     {
         var appointmentCreated = await _appointmentService.CreateAppointmentAsync(request);
@@ -37,9 +31,6 @@ public class AppointmentsController : ControllerBase
 
     [HttpGet("patient")]
     [Authorize(Roles = Roles.Patient + ", " + Roles.Administrator)]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    //[ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetPatientAppointments([FromQuery] long dni)
     {
         var appointments = await _appointmentService.GetActiveAppointmentsByPatientAsync(dni);
@@ -47,11 +38,9 @@ public class AppointmentsController : ControllerBase
         return Ok(appointments);
     }
 
+    //TODO: Un paciente puede cancelar cualquier turno simplemente porque conoce su GUID??!!
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = Roles.Patient + "," + Roles.Administrator)]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status404NotFound)]
-    //[ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Cancel(Guid id)
     {
         await _appointmentService.CancelAppointmentAsync(id);
@@ -59,9 +48,8 @@ public class AppointmentsController : ControllerBase
         return Ok("ok");
     }
 
-    [HttpGet] ///Esta mal
+    [HttpGet]
     [Authorize(Roles = Roles.Administrator)]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByDate([FromQuery] string date)
     {
         var result = await _appointmentService.GetAppointmentsByDateAsync(date);
@@ -70,7 +58,6 @@ public class AppointmentsController : ControllerBase
 
     [HttpGet("search")]
     [Authorize(Roles = Roles.Administrator)]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Search(
         [FromQuery] int pageSize,
         [FromQuery] int pageIndex,

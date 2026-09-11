@@ -50,16 +50,16 @@ backend-fixes
 
 | Área                  | Estado         | Observaciones                                |
 | --------------------- | -------------- | -------------------------------------------- |
-| Autenticación         | 🟡 En revisión | Se está revisando JWT, Identity y login      |
-| Administradores       | 🟡 En revisión | Login y registro                             |
-| Pacientes             | 🟡 En revisión | Primer acceso y asociación con Identity      |
+| Autenticación         | 🔵 En revisión | Se está revisando JWT, Identity y login      |
+| Administradores       | 🔵 En revisión | Login y registro                             |
+| Pacientes             | 🔵 En revisión | Primer acceso y asociación con Identity      |
 | Especialidades        | 🟡 En revisión | CRUD                                         |
 | Médicos               | 🟡 En revisión | CRUD y relación con especialidad             |
 | Disponibilidades      | 🟡 En revisión | Reglas mensuales y generación de slots       |
 | Turnos                | 🟡 En revisión | Reserva, cancelación y estados               |
-| EF Core               | 🟡 En revisión | Relaciones, índices y configuraciones        |
-| Soft Delete           | 🟡 En revisión | Verificar todos los DELETE                   |
-| JWT                   | 🟡 En revisión | Claims, roles y validación                   |
+| EF Core               | 🔵 En revisión | Relaciones, índices y configuraciones        |
+| Soft Delete           | ⚪ No probado | Verificar todos los DELETE                   |
+| JWT                   | 🔵 En revisión | Claims, roles y validación                   |
 | Manejo de excepciones | 🟡 En revisión | Validar detalles y códigos                   |
 | Pruebas de endpoints  | 🟡 En progreso | Actualizar esta tabla a medida que se pruebe |
 
@@ -1050,16 +1050,16 @@ Administrador
 
 * [ ] Login de administrador público.
 * [ ] Login de paciente público.
-* [ ] Resto de endpoints protegidos.
-* [ ] Operaciones administrativas requieren `Administrador`.
-* [ ] Operaciones de paciente requieren `Paciente` cuando corresponda.
+* [x] Resto de endpoints protegidos.
+* [x] Operaciones administrativas requieren `Administrador`.
+* [x] Operaciones de paciente requieren `Paciente` cuando corresponda.
 * [ ] JWT correctamente validado.
-* [ ] Issuer validado.
-* [ ] Audience validada.
-* [ ] Lifetime validado.
-* [ ] Signing key validada.
-* [ ] Password mínima de 8 caracteres.
-* [ ] Password almacenada mediante Identity.
+* [x] Issuer validado.
+* [x] Audience validada.
+* [x] Lifetime validado.
+* [x] Signing key validada.
+* [x] Password mínima de 8 caracteres.
+* [x] Password almacenada mediante Identity.
 * [ ] Usuarios eliminados no pueden autenticarse.
 * [ ] JWT utiliza `ApplicationUser.Id`.
 * [ ] JWT contiene el rol correspondiente.
@@ -1069,15 +1069,15 @@ Administrador
 
 # 31. Checklist de base de datos
 
-* [ ] Todas las entidades tienen GUID.
-* [ ] Relaciones EF Core correctamente configuradas.
-* [ ] Foreign Keys verificadas.
-* [ ] Índices únicos verificados.
-* [ ] `Patient.Dni` único.
-* [ ] `Patient.UserId` único.
-* [ ] `Appointment.AvailabilitySlotId` único.
-* [ ] `AvailabilityRule` no permite duplicados para la misma combinación.
-* [ ] RowVersion configurado donde corresponda.
+* [x] Todas las entidades tienen GUID.
+* [x] Relaciones EF Core correctamente configuradas.
+* [x] Foreign Keys verificadas.
+* [x] Índices únicos verificados.
+* [x] `Patient.Dni` único.
+* [x] `Patient.UserId` único.
+* [x] `Appointment.AvailabilitySlotId` único.
+* [x] `AvailabilityRule` no permite duplicados para la misma combinación.
+* [x] RowVersion configurado donde corresponda.
 * [ ] Soft delete revisado.
 * [ ] Migraciones actualizadas.
 * [ ] Base de datos actualizada mediante migraciones.
