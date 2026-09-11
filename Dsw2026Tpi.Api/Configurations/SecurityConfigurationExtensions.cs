@@ -7,24 +7,42 @@ using System.Text;
 
 namespace Dsw2026Tpi.Api.Configurations;
 
+//CHECK: Ready
 public static class SecurityConfigurationExtensions
 {
     public static IServiceCollection AddAppAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        //Obtener parámetros para creación del JWT desde appsettings.json
-        var jwtConfig = configuration.GetSection("Jwt");
-        var keyText = jwtConfig["Key"] ?? throw new ArgumentNullException("JWT Key");
-        var issuer = jwtConfig["Issuer"] ?? throw new ArgumentNullException("JWT Issuer");
-        var audience = jwtConfig["Audience"] ?? throw new ArgumentNullException("JWT Audience");
-        var key = Encoding.UTF8.GetBytes(keyText);
+        //Compruebo que lo que lea del JSON en la parte de JWT esta bien, y se almacena bajo JwtOptions
+        services
+            .AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.Key),
+                "JWT Key is required.")
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.Issuer),
+                "JWT Issuer is required.")
+            .Validate(
+                options => !string.IsNullOrWhiteSpace(options.Audience),
+                "JWT Audience is required.")
+            .Validate(
+                options => options.ExpiresInMinutes > 0,
+                "JWT expiration must be greater than zero.")
+            .ValidateOnStart();
+
+        var jwtOptions = configuration.GetSection(JwtOptions.SectionName)
+            .Get<JwtOptions>() ?? throw new InvalidOperationException("JWT configuration is missing.");
+
+        var key = Encoding.UTF8.GetBytes(jwtOptions.Key);
 
         //Agregar autenticación
-        services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
+        services
+            .AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
             .AddJwtBearer(options =>
             {
                 //Definir parámetros para la generación del token
@@ -34,18 +52,19 @@ public static class SecurityConfigurationExtensions
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = issuer,
-                    ValidAudience = audience,
+
+                    ValidIssuer = jwtOptions.Issuer,
+                    ValidAudience = jwtOptions.Audience,
+
                     IssuerSigningKey = new SymmetricSecurityKey(key),
 
                     ClockSkew = TimeSpan.Zero
                 };
             });
-        services.AddAuthorizationBuilder()
-            .AddPolicy(Policies.AdminPolicy, policy =>
-                policy.RequireRole(Roles.Administrator))
-            .AddPolicy(Policies.PatientPolicy, policy =>
-                policy.RequireRole(Roles.Patient));
+        services
+            .AddAuthorizationBuilder()
+            .AddPolicy(Policies.AdminPolicy, policy => policy.RequireRole(Roles.Administrator))
+            .AddPolicy(Policies.PatientPolicy, policy => policy.RequireRole(Roles.Patient));
         //.SetFallbackPolicy(new AuthorizationPolicyBuilder()
         //.RequireAuthenticatedUser()
         //.Build());
@@ -79,7 +98,8 @@ public static class SecurityConfigurationExtensions
         {
             options.AddDefaultPolicy(policy =>
             {
-                policy.WithOrigins(allowedOrigins)
+                policy
+                    .WithOrigins(allowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();

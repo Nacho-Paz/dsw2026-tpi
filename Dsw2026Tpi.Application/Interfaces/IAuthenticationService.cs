@@ -2,6 +2,7 @@
 
 namespace Dsw2026Tpi.Application.Interfaces;
 
+//CHECK: Ready
 public interface IAuthenticationService
 {
     Task<RegisterModel.Response> Register(RegisterModel.Request request);

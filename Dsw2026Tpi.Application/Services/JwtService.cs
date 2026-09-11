@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Dsw2026Tpi.CrossCutting.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -6,33 +7,23 @@ using System.Text;
 
 namespace Dsw2026Tpi.Application.Services;
 
+//CHECK: Ready
 public class JwtService
 {
-    private readonly IConfiguration _config;
-    public JwtService(IConfiguration config)
+    private readonly JwtOptions _options;
+    public JwtService(IOptions<JwtOptions> options)
     {
-        _config = config;
+        _options = options.Value;
+        ValidateConfiguration();
     }
 
     public string GenerateToken(Guid userId, string username, string? role)
     {
+        if (userId == Guid.Empty) throw new ArgumentException("User ID is required.", nameof(userId));
         if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("Username is required.", nameof(username));
         if (string.IsNullOrWhiteSpace(role)) throw new ArgumentException("Role is required.", nameof(role));
 
-        var jwtConfig = _config.GetSection("Jwt");
-
-        var keyText = jwtConfig["Key"];
-        if (string.IsNullOrWhiteSpace(keyText)) throw new InvalidOperationException("JWT Key is not configured.");
-
-        var issuer = jwtConfig["Issuer"];
-        if (string.IsNullOrWhiteSpace(issuer)) throw new InvalidOperationException("JWT Issuer is not configured.");
-
-        var audience = jwtConfig["Audience"];
-        if (string.IsNullOrWhiteSpace(audience)) throw new InvalidOperationException("JWT Audience is not configured.");
-        
-        var expiresIn = int.Parse(jwtConfig["ExpiresInMinutes"] ?? "60");
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyText));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>
@@ -43,11 +34,11 @@ public class JwtService
             new Claim(ClaimTypes.Role, role)
         };
 
-        var expires = DateTime.UtcNow.AddMinutes(expiresIn);
+        var expires = DateTime.UtcNow.AddMinutes(_options.ExpiresInMinutes);
 
         var token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
+            issuer: _options.Issuer,
+            audience: _options.Audience,
             claims: claims,
             expires: expires,
             signingCredentials: credentials
@@ -56,5 +47,16 @@ public class JwtService
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
         return tokenString;
+    }
+
+    private void ValidateConfiguration()
+    {
+        if (string.IsNullOrWhiteSpace(_options.Key)) throw new InvalidOperationException("JWT Key is not configured.");
+
+        if (string.IsNullOrWhiteSpace(_options.Issuer)) throw new InvalidOperationException("JWT Issuer is not configured.");
+
+        if (string.IsNullOrWhiteSpace(_options.Audience)) throw new InvalidOperationException("JWT Audience is not configured.");
+
+        if (_options.ExpiresInMinutes <= 0) throw new InvalidOperationException("JWT expiration must be greater than zero.");
     }
 }

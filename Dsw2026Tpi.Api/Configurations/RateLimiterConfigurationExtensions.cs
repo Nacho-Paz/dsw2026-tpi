@@ -5,6 +5,7 @@ using System.Threading.RateLimiting;
 
 namespace Dsw2026Tpi.Api.Configurations;
 
+//CHECK: Ready
 public static class RateLimiterConfigurationExtensions
 {
     public static IServiceCollection AddAppRateLimiting(
@@ -42,10 +43,6 @@ public static class RateLimiterConfigurationExtensions
                     context.HttpContext.Request.Path,
                     context.HttpContext.Connection.RemoteIpAddress);
 
-                //var error = new ErrorResponse(
-                //    "RATE_LIMIT_EXCEEDED",
-                //    "Too many requests");
-
                 var error = new ErrorResponse(nameof(ErrorCodes.RATE_LIMIT_EXCEEDED), ErrorCodes.RATE_LIMIT_EXCEEDED);
 
                 context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
@@ -58,7 +55,8 @@ public static class RateLimiterConfigurationExtensions
             // 5 solicitudes/minuto por IP
             options.AddPolicy("AdminLogin", httpContext =>
             {
-                var partitionKey = $"ip:{httpContext.Connection.RemoteIpAddress}";
+                var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                var partitionKey = $"ip:{ip}";
 
                 return RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey,
@@ -73,7 +71,8 @@ public static class RateLimiterConfigurationExtensions
             // 10 solicitudes/minuto por IP
             options.AddPolicy("PatientLogin", httpContext =>
             {
-                var partitionKey = $"ip:{httpContext.Connection.RemoteIpAddress}";
+                var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                var partitionKey = $"ip:{ip}";
 
                 return RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey,
