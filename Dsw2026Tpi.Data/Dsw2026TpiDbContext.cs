@@ -29,5 +29,7 @@ public class Dsw2026TpiDbContext : DbContext
         modelBuilder.ApplyConfiguration(new DoctorConfiguration());
         modelBuilder.ApplyConfiguration(new SpecialityConfiguration());
         modelBuilder.ApplyConfiguration(new PatientConfiguration());
+
     }
+
 }

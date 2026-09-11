@@ -18,42 +18,33 @@ namespace Dsw2026Tpi.Application.Services
             _logger = logger;
         }
 
-        public async Task<Pagination<SpecialtyModel>> GetSpecialties(SpecialtyQueryFilter filter)
-
+        public async Task<PaginatedResponse<SpecialtyModel>> GetSpecialties(SpecialtyQueryFilter filter)
         {
-            var specialtiesList = await _persistence.GetFiltered<Specialty>(
-                s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name)));
+            var pagedSpecialties = await _persistence.Paginate<Specialty, string>(
+                filter.PageSize,
+                filter.PageIndex,
+                s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name)),
+                s => s.Name
+            );
 
-            if (specialtiesList == null || !specialtiesList.Any())
+            if (pagedSpecialties.Data == null || !pagedSpecialties.Data.Any())
             {
                 _logger.LogWarning("No se encontraron especialidades que coincidan con los criterios de búsqueda.");
                 throw new EntityNotFoundException("Specialty");
             }
 
-            var query = specialtiesList.ToList();
-
-            var totalRecords = query.Count();
-            if (totalRecords == 0) return Pagination<SpecialtyModel>.Empty;
-
-            var pagedData = query
-                .Skip((filter.PageIndex - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToList();
-
-            var paginationResult = new Pagination<Specialty>(
-                filter.PageSize,
-                filter.PageIndex,
-                totalRecords,
-                pagedData
-                );
-
-            return paginationResult.Map(s => new SpecialtyModel
+            return new PaginatedResponse<SpecialtyModel>
             {
-                Id = s.Id,
-                Name = s.Name,
-                Description = s.Description
-            });
-
+                pageSize = pagedSpecialties.PageSize,
+                pageIndex = pagedSpecialties.PageIndex,
+                Total = pagedSpecialties.Total,
+                data = pagedSpecialties.Data.Select(s => new SpecialtyModel
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Description = s.Description
+                })
+            };
         }
 
         ///FUNCIONA BIEN//
