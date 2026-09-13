@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Dsw2026Tpi.Data.Configurations;
 
-internal class AvailabilitySlotConfiguration : IEntityTypeConfiguration<AvailabilitySlot>
+public class AvailabilitySlotConfiguration : IEntityTypeConfiguration<AvailabilitySlot>
 {
     public void Configure(EntityTypeBuilder<AvailabilitySlot> builder)
     {
