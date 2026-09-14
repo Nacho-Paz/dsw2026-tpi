@@ -1,5 +1,6 @@
 ﻿using Dsw2026Tpi.Application.Dtos;
 using Dsw2026Tpi.Application.Interfaces;
+using Dsw2026Tpi.CrossCutting.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -17,10 +18,10 @@ public class AuthenticationController : AppController
         _authenticationService = authenticationService;
     }
 
-    //TODO: Libre para todos hasta crear uno más privado
+    //FUNCIONA
     [HttpPost("admin/register")]
-    //[Authorize(Policy = Policies.AdminPolicy)]
-    //[EnableRateLimiting("GeneralPolicy")]
+    [Authorize(Policy = Policies.AdminPolicy)]
+    [EnableRateLimiting("GeneralPolicy")]
     public async Task<IActionResult> Register([FromBody] RegisterModel.Request request)
     {
         var result = await _authenticationService.Register(request);
