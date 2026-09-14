@@ -768,28 +768,30 @@ Antes de modificarlo globalmente se debe verificar cómo están modeladas todas 
 
 Esta tabla debe ser la referencia rápida para saber qué parte del backend está funcionando.
 
-| #  | Recurso      | Método | Endpoint    | Auth    | Estado | Última prueba |
-| -- | ------------ | ------ | ----------- | ------- | ------ | ------------- |
-| 1  | Admin        | POST   | `/...`      | Público | 🟡     | -             |
-| 2  | Admin        | POST   | `/...`      | Admin   | 🟡     | -             |
-| 3  | Patient      | POST   | `/...`      | Público | 🟡     | -             |
-| 4  | Specialty    | GET    | `/...`      | Admin   | ⚪      | -             |
-| 5  | Specialty    | GET    | `/.../{id}` | Admin   | ⚪      | -             |
-| 6  | Specialty    | POST   | `/...`      | Admin   | ⚪      | -             |
-| 7  | Specialty    | PUT    | `/.../{id}` | Admin   | ⚪      | -             |
-| 8  | Specialty    | DELETE | `/.../{id}` | Admin   | ⚪      | -             |
-| 9  | Doctor       | GET    | `/...`      | Admin   | ⚪      | -             |
-| 10 | Doctor       | GET    | `/.../{id}` | Admin   | ⚪      | -             |
-| 11 | Doctor       | POST   | `/...`      | Admin   | ⚪      | -             |
-| 12 | Doctor       | PUT    | `/.../{id}` | Admin   | ⚪      | -             |
-| 13 | Doctor       | DELETE | `/.../{id}` | Admin   | ⚪      | -             |
-| 14 | Availability | GET    | `/...`      | Admin   | ⚪      | -             |
-| 15 | Availability | POST   | `/...`      | Admin   | ⚪      | -             |
-| 16 | Availability | PUT    | `/...`      | Admin   | ⚪      | -             |
-| 17 | Appointment  | GET    | `/...`      | Auth    | ⚪      | -             |
-| 18 | Appointment  | POST   | `/...`      | Patient | ⚪      | -             |
-| 19 | Appointment  | PUT    | `/...`      | Auth    | ⚪      | -             |
-| 20 | Appointment  | DELETE | `/...`      | Patient | ⚪      | -             |
+| #  | Recurso      | Método | Endpoint                | Auth    | Estado | Última prueba |
+| -- | ------------ | ------ | ----------------------- | ------- | ------ | ------------- |
+| 1  | Admin        | POST   | `/...`                  | Público | 🟡     | -             |
+| 2  | Admin        | POST   | `/...`                  | Admin   | 🟡     | -             |
+| 3  | Patient      | POST   | `/...`                  | Público | 🟡     | -             |
+| 4  | Specialty    | GET    | `/api/specialties`      | Admin   | 🟢     | 2026-09-14    |
+| 5  | Specialty    | GET    | `/api/specialties/{id}` | Admin   | 🟢     | 2026-09-14    |
+| 6  | Specialty    | POST   | `/api/specialties`      | Admin   | 🟢     | 2026-09-14    |
+| 7  | Specialty    | PUT    | `/api/specialties/{id}` | Admin   | 🟢     | 2026-09-14    |
+| 8  | Specialty    | DELETE | `/api/specialties/{id}` | Admin   | 🟢     | 2026-09-14    |
+| 9  | Doctor       | GET    | `/...`                  | Admin   | ⚪     | -             |
+| 10 | Doctor       | GET    | `/.../{id}`             | Admin   | ⚪     | -             |
+| 11 | Doctor       | POST   | `/...`                  | Admin   | ⚪     | -             |
+| 12 | Doctor       | PUT    | `/.../{id}`             | Admin   | ⚪     | -             |
+| 13 | Doctor       | DELETE | `/.../{id}`             | Admin   | ⚪     | -             |
+| 14 | Availability | GET    | `/...`                  | Admin   | ⚪     | -             |
+| 15 | Availability | POST   | `/...`                  | Admin   | ⚪     | -             |
+| 16 | Availability | PUT    | `/...`                  | Admin   | ⚪     | -             |
+| 17 | Appointment  | GET    | `/...`                  | Auth    | ⚪     | -             |
+| 18 | Appointment  | POST   | `/...`                  | Patient | ⚪     | -             |
+| 19 | Appointment  | PUT    | `/...`                  | Auth    | ⚪     | -             |
+| 20 | Appointment  | DELETE | `/...`                  | Patient | ⚪     | -             |
+
+---
 
 > Reemplazar `/...` por las rutas reales de los controllers a medida que se consoliden.
 
@@ -893,10 +895,8 @@ Pendiente.
 MODULO- SPECIALTIES
 
 
-
 ### Endpoint
 POST /api/specialties
-
 ### Usuario utilizado
 Administrador
 
@@ -906,8 +906,6 @@ Administrador
   "name": "Cardiología",
   "description": "Atención especializada del corazón"
 }```
-
-
 
 ### Resultado esperado
 
@@ -935,7 +933,7 @@ HTTP 200
 ```text
 🟢 Funciona
 ```
-
+```
 
 
 
@@ -983,7 +981,7 @@ HTTP 200
 
 
 
-
+```
 
 ### Registro de Prueba: GET Paginado Specialty
 ```
@@ -1012,11 +1010,11 @@ HTTP 200
       "description": "Atención especializada del corazón"
     }
   ]
-}
-```
+}```
 
 ```
-
+```
+```
 ### Registro de Prueba: DELETE Specialty (Soft Delete)
 
 ### Endpoint
@@ -1044,8 +1042,40 @@ HTTP 204 No Content
 El endpoint responde correctamente con un código 204 (operación exitosa sin contenido extra para mostrar). Se verifica el cumplimiento del Soft Delete establecido en la regla de negocio.
 
 ```
+```
+# 25. Ejemplo de prueba fallida
 
+### Endpoint
+POST /api/specialties
 
+### Request
+```json
+{
+  "name": "",
+  "description": "Prueba de error de validación"
+}
+```
+##Resultado
+HTTP 400 Bad Request
+
+##Problema
+El sistema rechaza la petición porque el campo name está vacío.
+
+##Response
+```
+{
+  "ErrorCode": "VALIDATION_ERROR",
+  "Message": "Uno o más errores de validación ocurrieron",
+  "Details": []
+}
+```
+##Estado
+🟢 Funciona
+
+##Observaciones
+La validación ataja correctamente los datos inválidos devolviendo un 400.
+Nota técnica para el equipo: El array Details está llegando vacío. Sería ideal que a futuro el middleware mapee los errores del ModelState o de FluentValidation dentro de ese array para que el frontend sepa exactamente qué campo falló (ej: "Name: El campo es requerido").
+```
 # 26. Problemas encontrados
 
 Registrar aquí errores importantes descubiertos durante la refactorización.
