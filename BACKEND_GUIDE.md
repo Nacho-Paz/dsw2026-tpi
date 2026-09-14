@@ -843,13 +843,7 @@ HTTP ...
 🟢 Funciona
 ```
 
-### Observaciones
 
-```text
-...
-```
-
----
 
 # 25. Ejemplo de prueba fallida
 
@@ -892,6 +886,134 @@ Pendiente.
 ```
 
 ---
+
+
+
+
+MODULO- SPECIALTIES
+
+
+
+### Endpoint
+POST /api/specialties
+
+### Usuario utilizado
+Administrador
+
+### Request
+```json
+{
+  "name": "Cardiología",
+  "description": "Atención especializada del corazón"
+}```
+
+
+
+### Resultado esperado
+
+```text
+HTTP 200
+```
+
+### Resultado obtenido
+
+```text
+HTTP 200
+```
+
+### Response
+
+```{
+  "id": "9abb07cf-288a-4077-b2d1-0a5bb56c2a5d",
+  "name": "Cardiología",
+  "description": "Atención especializada del corazón"
+}
+```
+
+### Estado
+
+```text
+🟢 Funciona
+```
+
+
+
+
+
+
+### Registro de Prueba: PUT Specialty
+### Endpoint
+PUT /api/specialties/9abb07cf-288a-4077-b2d1-0a5bb56c2a5d
+
+### Usuario utilizado
+Administrador
+
+### Request
+```json
+{
+  "name": "Patologias cardiologicas",
+  "description": "Enfermedades Graves del corazon"
+}
+
+
+### Resultado esperado
+
+```text
+HTTP 200
+```
+
+### Resultado obtenido
+
+```text
+HTTP 200
+```
+
+### Response
+```{
+  "id": "9abb07cf-288a-4077-b2d1-0a5bb56c2a5d",
+  "name": "Patologias cardiologicas",
+  "description": "Enfermedades Graves del corazon"
+}```
+
+##Estado
+🟢 Funciona
+
+```
+
+
+
+
+
+### Registro de Prueba: GET Paginado Specialty
+```
+### Endpoint
+GET /api/specialties?PageSize=1&PageIndex=2
+
+### Usuario utilizado
+Administrador
+
+### Resultado esperado
+HTTP 200
+
+### Resultado obtenido
+HTTP 200
+
+### Response
+```json
+{
+  "pageSize": 1,
+  "pageIndex": 1,
+  "total": 1,
+  "data": [
+    {
+      "id": "9abb07cf-288a-4077-b2d1-0a5bb56c2a5d",
+      "name": "Cardiología",
+      "description": "Atención especializada del corazón"
+    }
+  ]
+}
+```
+
 
 # 26. Problemas encontrados
 
