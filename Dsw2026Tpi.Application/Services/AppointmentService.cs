@@ -8,6 +8,7 @@ using Dsw2026Tpi.Domain.Interfaces;
 using Dsw2026Tpi.Domain.Status;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace Dsw2026Tpi.Application.Services;
 
@@ -22,13 +23,8 @@ public class AppointmentService : IAppointmentService
     }
     public async Task<AppointmentModel.Response> CreateAppointmentAsync(AppointmentModel.Request request)
     {
-        string dniString = request.Patient.Dni.ToString();
-        if (dniString.Length < 7 || dniString.Length > 10)
-        {
-            throw new ValidationException("El DNI debe tener entre 7 y 10 dígitos.", "INVALID_DNI");
-        }
         _logger.LogInformation("Iniciando solicitud de reserva de turno para el médico {DoctorId} y el slot {SlotId}.",
-            request.DoctorId, request.AvailabilitySlotId);
+         request.DoctorId, request.AvailabilitySlotId);
 
         ValidateRequest(request);
 
@@ -63,10 +59,10 @@ public class AppointmentService : IAppointmentService
             throw new ConflictException("INVALID_DATE", "No se pueden reservar turnos pasados.");
         }
 
-        var patient = await _persistence.First<Patient>(p => p.Dni == dniString);
+        var patient = await _persistence.First<Patient>(p => p.Dni == request.Patient.Dni.ToString());
         if (patient == null)
         {
-            _logger.LogWarning("Paciente con DNI {PatientDni} no encontrado al intentar reservar el slot {SlotId}.", dniString, slot.Id);
+            _logger.LogWarning("Paciente con DNI {PatientDni} no encontrado al intentar reservar el slot {SlotId}.", request.Patient.Dni, slot.Id);
             throw new ConflictException("PATIENT_NOT_FOUND", "El paciente no existe en el sistema.");
         }
 
@@ -80,18 +76,18 @@ public class AppointmentService : IAppointmentService
 
         slot.Status = SlotStatus.BOOKED;
 
-        await _persistence.Add(appointment);
-
         try
         {
+            await _persistence.Add(appointment);
+            slot.Status = SlotStatus.BOOKED;
             await _persistence.Update(slot);
         }
-        catch (DbUpdateConcurrencyException ex)
+        catch (DbUpdateException ex)
         {
-            _logger.LogWarning(ex, "Conflicto de concurrencia: El slot {SlotId} fue reservado por otra transacción simultáneamente.", slot.Id);
-            throw new ConflictException("APPOINTMENT_CONFLICT", "El turno ya esta reservado");
+            _logger.LogWarning(ex, "Conflicto al reservar el slot {SlotId}: probablemente ya fue tomado por otra transacción.", slot.Id);
+            throw new ConflictException("APPOINTMENT_CONFLICT", "El turno ya está reservado");
         }
-
+        
         _logger.LogInformation("Turno creado exitosamente para el paciente {PatientId} en el slot {SlotId}.", patient.Id, slot.Id);
 
         return new AppointmentModel.Response(
@@ -100,7 +96,7 @@ public class AppointmentService : IAppointmentService
             appointment.PatientId,
             appointment.Reason,
             appointment.Status.ToString(),
-            DateTime.Now
+            appointment.CreatedAt
         );
     }
 
@@ -155,10 +151,6 @@ public class AppointmentService : IAppointmentService
     {
         _logger.LogInformation("Consultando turnos activos para el paciente con DNI: {PatientDni}", dni);
 
-        var activeAppointments = await _persistence.GetFiltered<Appointment>(
-            a => a.Patient.Dni == dni.ToString() && a.Status == AppointmentStatus.BOOKED,
-            "AvailabilitySlot.AvailabilityRule.Doctor,Patient");
-
         var patient = await _persistence.First<Patient>(p => p.Dni == dni.ToString());
 
         if (patient == null)
@@ -166,6 +158,12 @@ public class AppointmentService : IAppointmentService
             _logger.LogWarning("Consulta de turnos fallida: No se encontró ningún paciente registrado con el DNI {PatientDni}.", dni);
             throw new EntityNotFoundException(nameof(Patient));
         }
+
+        var activeAppointments = await _persistence.GetFiltered<Appointment>(
+            a => a.Patient.Dni == dni.ToString() && a.Status == AppointmentStatus.BOOKED
+            && (a.AvailabilitySlot.SlotDate.Date > DateTime.Now.Date
+            || (a.AvailabilitySlot.SlotDate.Date == DateTime.Now.Date && a.AvailabilitySlot.StartTime >= DateTime.Now.TimeOfDay)),
+            "AvailabilitySlot.AvailabilityRule.Doctor,Patient");
 
         if (activeAppointments == null || !activeAppointments.Any())
         {
@@ -181,7 +179,7 @@ public class AppointmentService : IAppointmentService
             DoctorName = a.AvailabilitySlot.AvailabilityRule.Doctor.Name,
             Date = a.AvailabilitySlot.SlotDate,
             StartTime = a.AvailabilitySlot.StartTime, //TODO: Ver eso
-            Status = a.Status //TODO: Ver eso
+            Status = a.Status.ToString()
         }).ToList();
     }
     public async Task CancelAppointmentAsync(Guid appointmentId)
@@ -218,10 +216,20 @@ public class AppointmentService : IAppointmentService
     {
         _logger.LogInformation("Consultando la grilla de turnos para la fecha: {RequestedDate}", date);
 
-        if (!DateTime.TryParse(date, out DateTime parsedDate))
+        DateTime parsedDate;
+
+        if (!DateTime.TryParseExact(
+            date,
+            "yyyy-MM-dd",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out parsedDate))
         {
             _logger.LogWarning("Consulta de turnos fallida: El valor proporcionado no es un formato de fecha válido.");
-            throw new ValidationException("Formato de fecha inválido. Use YYYY-MM-DD.", ErrorCodes.VALIDATION_ERROR);
+
+            throw new ValidationException(
+                "Formato de fecha inválido. Use YYYY-MM-DD.",
+                ErrorCodes.VALIDATION_ERROR);
         }
 
         var appointments = await _persistence.GetFiltered<Appointment>(
@@ -230,14 +238,17 @@ public class AppointmentService : IAppointmentService
         );
 
         appointments ??= new List<Appointment>();
-        _logger.LogInformation("Consulta finalizada exitosamente: Se encontraron {AppointmentCount} " +
-            "turnos para la fecha {ParsedDate:yyyy-MM-dd}.", appointments.Count(), parsedDate);
+
+        _logger.LogInformation(
+            "Consulta finalizada exitosamente: Se encontraron {AppointmentCount} turnos para la fecha {ParsedDate:yyyy-MM-dd}.",
+            appointments.Count(),
+            parsedDate);
 
         return appointments.Select(a => new
         {
             AppointmentId = a.Id,
-            Status = a.Status, //TODO: Ver eso
-            PatientDni = a.Patient.Dni ?? "",
+            Status = a.Status.ToString(),
+            PatientDni = a.Patient?.Dni ?? "",
             Time = a.AvailabilitySlot?.StartTime ?? TimeSpan.Zero
         }).ToList();
     }
