@@ -48,17 +48,17 @@ backend-fixes
 
 ## Estado general
 
-| Área                  | Estado         | Observaciones                                |
-| --------------------- | -------------- | -------------------------------------------- |
+| Área                  | Estado        | Observaciones                                |
+| --------------------- | ------------- | -------------------------------------------- |
 | Autenticación         | 🔵 En revisión | Se está revisando JWT, Identity y login      |
-| Administradores       | 🔵 En revisión | Login y registro                             |
+| Administradores       | 🟢 Funciona    | Login y registro                             |
 | Pacientes             | 🔵 En revisión | Primer acceso y asociación con Identity      |
 | Especialidades        | 🟡 En revisión | CRUD                                         |
 | Médicos               | 🟡 En revisión | CRUD y relación con especialidad             |
 | Disponibilidades      | 🟡 En revisión | Reglas mensuales y generación de slots       |
 | Turnos                | 🟡 En revisión | Reserva, cancelación y estados               |
 | EF Core               | 🔵 En revisión | Relaciones, índices y configuraciones        |
-| Soft Delete           | ⚪ No probado | Verificar todos los DELETE                   |
+| Soft Delete           | ⚪ No probado  | Verificar todos los DELETE                   |
 | JWT                   | 🔵 En revisión | Claims, roles y validación                   |
 | Manejo de excepciones | 🟡 En revisión | Validar detalles y códigos                   |
 | Pruebas de endpoints  | 🟡 En progreso | Actualizar esta tabla a medida que se pruebe |
@@ -199,6 +199,25 @@ El rol se incluye mediante:
 ClaimTypes.Role
 ```
 
+## IdentitySeeder
+
+Al momento de inicializar la aplicación por primera vez no se puede registrar un primer administrador de forma "manual", este mismo es realizado por el `IdentitySeeder`. Cuyo método se encarga de crear un usuario con el rol **Administrador**.
+
+Las credenciales son:
+* email = "admin@dws2026.prueba";
+* password = GenerateSecurePassword();
+
+```text
+GenerateSecurePassword()
+```
+Este método lo que realiza es la creación de una contraseña aleatoria cumpliendo los estándares de seguridad previamente definidos.
+
+Estas credenciales realizadas en tiempo de ejecución se imprimen por única vez en el log de la aplicación, de no ser capturadas de alguna manera las mismas se perderán. 
+- En ese caso se deberá borrar manualmente de la base de datos el primer usuario generado.
+- Reiniciar la aplicación y capturar las credenciales generadas en tiempo de ejecución impresas en el log.
+
+Con estas credenciales se puede realizar el login de un usuario administrador y comenzar a probar el sistema.
+
 ### Importante
 
 El DNI del paciente **no debe utilizarse como identificador principal del JWT**.
@@ -248,7 +267,7 @@ POST /...
 
 ### Estado
 
-🟡 En revisión
+🟢 Funciona
 
 ---
 
@@ -291,7 +310,7 @@ Si la creación del usuario funciona pero la asignación del rol falla, se inten
 
 ### Estado
 
-🟡 En revisión
+🟢 Funciona
 
 ---
 
@@ -768,28 +787,28 @@ Antes de modificarlo globalmente se debe verificar cómo están modeladas todas 
 
 Esta tabla debe ser la referencia rápida para saber qué parte del backend está funcionando.
 
-| #  | Recurso      | Método | Endpoint                | Auth    | Estado | Última prueba |
-| -- | ------------ | ------ | ----------------------- | ------- | ------ | ------------- |
-| 1  | Admin        | POST   | `/...`                  | Público | 🟡     | -             |
-| 2  | Admin        | POST   | `/...`                  | Admin   | 🟡     | -             |
-| 3  | Patient      | POST   | `/...`                  | Público | 🟡     | -             |
-| 4  | Specialty    | GET    | `/api/specialties`      | Admin   | 🟢     | 2026-09-14    |
-| 5  | Specialty    | GET    | `/api/specialties/{id}` | Admin   | 🟢     | 2026-09-14    |
-| 6  | Specialty    | POST   | `/api/specialties`      | Admin   | 🟢     | 2026-09-14    |
-| 7  | Specialty    | PUT    | `/api/specialties/{id}` | Admin   | 🟢     | 2026-09-14    |
-| 8  | Specialty    | DELETE | `/api/specialties/{id}` | Admin   | 🟢     | 2026-09-14    |
-| 9  | Doctor       | GET    | `/...`                  | Admin   | ⚪     | -             |
-| 10 | Doctor       | GET    | `/.../{id}`             | Admin   | ⚪     | -             |
-| 11 | Doctor       | POST   | `/...`                  | Admin   | ⚪     | -             |
-| 12 | Doctor       | PUT    | `/.../{id}`             | Admin   | ⚪     | -             |
-| 13 | Doctor       | DELETE | `/.../{id}`             | Admin   | ⚪     | -             |
-| 14 | Availability | GET    | `/...`                  | Admin   | ⚪     | -             |
-| 15 | Availability | POST   | `/...`                  | Admin   | ⚪     | -             |
-| 16 | Availability | PUT    | `/...`                  | Admin   | ⚪     | -             |
-| 17 | Appointment  | GET    | `/...`                  | Auth    | ⚪     | -             |
-| 18 | Appointment  | POST   | `/...`                  | Patient | ⚪     | -             |
-| 19 | Appointment  | PUT    | `/...`                  | Auth    | ⚪     | -             |
-| 20 | Appointment  | DELETE | `/...`                  | Patient | ⚪     | -             |
+| #   | Recurso      | Método | Endpoint                | Auth    | Estado | Última prueba |
+| --- | ------------ | ------ | ----------------------- | ------- | ------ | ------------- |
+| 1   | Admin        | POST   | `/...`                  | Público | 🟢      | -             |
+| 2   | Admin        | POST   | `/...`                  | Admin   | 🟢      | -             |
+| 3   | Patient      | POST   | `/...`                  | Público | 🟡      | -             |
+| 4   | Specialty    | GET    | `/api/specialties`      | Admin   | 🟢      | 2026-09-14    |
+| 5   | Specialty    | GET    | `/api/specialties/{id}` | Admin   | 🟢      | 2026-09-14    |
+| 6   | Specialty    | POST   | `/api/specialties`      | Admin   | 🟢      | 2026-09-14    |
+| 7   | Specialty    | PUT    | `/api/specialties/{id}` | Admin   | 🟢      | 2026-09-14    |
+| 8   | Specialty    | DELETE | `/api/specialties/{id}` | Admin   | 🟢      | 2026-09-14    |
+| 9   | Doctor       | GET    | `/...`                  | Admin   | ⚪      | -             |
+| 10  | Doctor       | GET    | `/.../{id}`             | Admin   | ⚪      | -             |
+| 11  | Doctor       | POST   | `/...`                  | Admin   | ⚪      | -             |
+| 12  | Doctor       | PUT    | `/.../{id}`             | Admin   | ⚪      | -             |
+| 13  | Doctor       | DELETE | `/.../{id}`             | Admin   | ⚪      | -             |
+| 14  | Availability | GET    | `/...`                  | Admin   | ⚪      | -             |
+| 15  | Availability | POST   | `/...`                  | Admin   | ⚪      | -             |
+| 16  | Availability | PUT    | `/...`                  | Admin   | ⚪      | -             |
+| 17  | Appointment  | GET    | `/...`                  | Auth    | ⚪      | -             |
+| 18  | Appointment  | POST   | `/...`                  | Patient | ⚪      | -             |
+| 19  | Appointment  | PUT    | `/...`                  | Auth    | ⚪      | -             |
+| 20  | Appointment  | DELETE | `/...`                  | Patient | ⚪      | -             |
 
 ---
 
@@ -888,24 +907,98 @@ Pendiente.
 ```
 
 ---
-
-
-
-
-MODULO- SPECIALTIES
-
+## SECURITY
 
 ### Endpoint
-POST /api/specialties
+- **/api/auth/admin/login**
 ### Usuario utilizado
-Administrador
+Indiferente
 
 ### Request
 ```json
 {
-  "name": "Cardiología",
-  "description": "Atención especializada del corazón"
-}```
+  "email": "string",
+  "password": "string"
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 400
+```
+
+### Resultado obtenido
+
+```text
+HTTP 400
+```
+
+### Response
+
+```json
+{
+  "ErrorCode": "VALIDATION_ERROR",
+  "Message": "Uno o más errores de validación ocurrieron",
+  "Details": [
+    {
+      "Field": "email",
+      "Issue": "Email is invalid"
+    }
+  ]
+}
+```
+
+### Endpoint
+- **/api/auth/admin/login**
+### Usuario utilizado
+Indiferente
+
+### Request
+```json
+{
+  "email": "nacho@gmail.com",
+  "password": "pepe"
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 401
+```
+
+### Resultado obtenido
+
+```text
+HTTP 401
+```
+
+### Response
+
+```json
+{
+  "ErrorCode": "AUTHENTICATION_FAILED",
+  "Message": "Usuario o contraseña incorrectos",
+  "Details": []
+}
+```
+
+### Detalles
+La respuesta indica que el usuario o contraseña son incorrectos, por más que por ejemplo el correo electrónico si exista, ya que no se indicara que credencial ya se encuentra almacenada por cuestiones de seguridad.
+
+### Endpoint
+- **/api/auth/admin/login**
+### Usuario utilizado
+Indiferente
+
+### Request
+```json
+{
+  "email": "nacho@gmail.com",
+  "password": "Qwerty1234/"
+}
+```
 
 ### Resultado esperado
 
@@ -921,7 +1014,278 @@ HTTP 200
 
 ### Response
 
-```{
+```json
+{
+  "token": "[token]",
+  "role": "Administrador"
+}
+```
+### Endpoint
+- **/api/auth/admin/register**
+### Usuario utilizado
+Sin autenticar
+
+### Request
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 401
+```
+
+### Resultado obtenido
+
+```text
+HTTP 401 No Content
+```
+
+### Endpoint
+- **/api/auth/admin/register**
+### Usuario utilizado
+Administrador
+
+### Request
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 400
+```
+
+### Resultado obtenido
+
+```text
+HTTP 400
+```
+
+### Response
+
+```json
+{
+  "ErrorCode": "VALIDATION_ERROR",
+  "Message": "Uno o más errores de validación ocurrieron",
+  "Details": [
+    {
+      "Field": "email",
+      "Issue": "Email is invalid"
+    }
+  ]
+}
+```
+
+### Endpoint
+- **/api/auth/admin/register**
+### Usuario utilizado
+Administrador
+
+### Request
+```json
+{
+  "email": "nacho@gmail.com",
+  "password": ""
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 409
+```
+
+### Resultado obtenido
+
+```text
+HTTP 409
+```
+
+### Response
+
+```json
+{
+  "ErrorCode": "REGISTER_USER_CONFLICT",
+  "Message": "Se produjo un error al registrar el usuario",
+  "Details": [
+    {
+      "Field": "PasswordTooShort",
+      "Issue": "Passwords must be at least 8 characters."
+    },
+    {
+      "Field": "PasswordRequiresNonAlphanumeric",
+      "Issue": "Passwords must have at least one non alphanumeric character."
+    },
+    {
+      "Field": "PasswordRequiresDigit",
+      "Issue": "Passwords must have at least one digit ('0'-'9')."
+    },
+    {
+      "Field": "PasswordRequiresLower",
+      "Issue": "Passwords must have at least one lowercase ('a'-'z')."
+    },
+    {
+      "Field": "PasswordRequiresUpper",
+      "Issue": "Passwords must have at least one uppercase ('A'-'Z')."
+    },
+    {
+      "Field": "PasswordRequiresUniqueChars",
+      "Issue": "Passwords must use at least 1 different characters."
+    }
+  ]
+}
+```
+
+### Endpoint
+- **/api/auth/admin/register**
+### Usuario utilizado
+Administrador
+
+### Request
+```json
+{
+  "email": "nacho@gmail.com",
+  "password": "Pepe1234%"
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 409
+```
+
+### Resultado obtenido
+
+```text
+HTTP 409
+```
+
+### Response
+
+```json
+{
+  "ErrorCode": "REGISTER_USER_CONFLICT",
+  "Message": "Se produjo un error al registrar el usuario",
+  "Details": [
+    {
+      "Field": "DuplicateUserName",
+      "Issue": "Username 'nacho@gmail.com' is already taken."
+    },
+    {
+      "Field": "DuplicateEmail",
+      "Issue": "Email 'nacho@gmail.com' is already taken."
+    }
+  ]
+}
+```
+
+### Endpoint
+- **/api/auth/admin/register**
+### Usuario utilizado
+Administrador
+
+### Request
+```json
+{
+  "email": "nacho1@gmail.com",
+  "password": "Pepe1234%"
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 200
+```
+
+### Resultado obtenido
+
+```text
+HTTP 200 No Content
+```
+### Endpoint
+- **/api/auth/admin/register**
+### Usuario utilizado
+Administrador
+
+### Request
+```json
+{
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 400
+```
+
+### Resultado obtenido
+
+```text
+HTTP 400
+```
+
+### Response
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Email": [
+      "The Email field is required."
+    ],
+    "Password": [
+      "The Password field is required."
+    ]
+  },
+  "traceId": "00-226ab1117e0e9c3b9b7f8d295486dba5-81632bda48b5b81e-00"
+}
+```
+
+## MODULO - SPECIALTIES
+
+### Endpoint
+- **POST /api/specialties**
+### Usuario utilizado
+Administrador
+
+### Request
+```json
+{
+  "name": "Cardiología",
+  "description": "Atención especializada del corazón"
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 200
+```
+
+### Resultado obtenido
+
+```text
+HTTP 200
+```
+
+### Response
+
+```json
+{
   "id": "9abb07cf-288a-4077-b2d1-0a5bb56c2a5d",
   "name": "Cardiología",
   "description": "Atención especializada del corazón"
@@ -933,16 +1297,10 @@ HTTP 200
 ```text
 🟢 Funciona
 ```
-```
-
-
-
-
-```
 
 ### Registro de Prueba: PUT Specialty
 ### Endpoint
-PUT /api/specialties/9abb07cf-288a-4077-b2d1-0a5bb56c2a5d
+- **PUT /api/specialties/9abb07cf-288a-4077-b2d1-0a5bb56c2a5d**
 
 ### Usuario utilizado
 Administrador
@@ -953,8 +1311,7 @@ Administrador
   "name": "Patologias cardiologicas",
   "description": "Enfermedades Graves del corazon"
 }
-
-
+```
 ### Resultado esperado
 
 ```text
@@ -968,25 +1325,20 @@ HTTP 200
 ```
 
 ### Response
-```{
+```json
+{
   "id": "9abb07cf-288a-4077-b2d1-0a5bb56c2a5d",
   "name": "Patologias cardiologicas",
   "description": "Enfermedades Graves del corazon"
-}```
+}
+```
 
-##Estado
+## Estado
 🟢 Funciona
-
-```
-
-
-
-```
-
 ### Registro de Prueba: GET Paginado Specialty
-```
+
 ### Endpoint
-GET /api/specialties?PageSize=1&PageIndex=2
+- **GET /api/specialties?PageSize=1&PageIndex=2**
 
 ### Usuario utilizado
 Administrador
@@ -1010,15 +1362,12 @@ HTTP 200
       "description": "Atención especializada del corazón"
     }
   ]
-}```
-
-```
-```
+}
 ```
 ### Registro de Prueba: DELETE Specialty (Soft Delete)
 
 ### Endpoint
-DELETE /api/specialties/3d115c87-0227-4ecd-ad80-3e43b9de7e7f
+- **DELETE /api/specialties/3d115c87-0227-4ecd-ad80-3e43b9de7e7f**
 
 ### Usuario utilizado
 Administrador
@@ -1041,8 +1390,6 @@ HTTP 204 No Content
 ### Observaciones
 El endpoint responde correctamente con un código 204 (operación exitosa sin contenido extra para mostrar). Se verifica el cumplimiento del Soft Delete establecido en la regla de negocio.
 
-```
-```
 # 25. Ejemplo de prueba fallida
 
 ### Endpoint
@@ -1055,13 +1402,13 @@ POST /api/specialties
   "description": "Prueba de error de validación"
 }
 ```
-##Resultado
+## Resultado
 HTTP 400 Bad Request
 
-##Problema
+## Problema
 El sistema rechaza la petición porque el campo name está vacío.
 
-##Response
+## Response
 ```
 {
   "ErrorCode": "VALIDATION_ERROR",
@@ -1069,23 +1416,23 @@ El sistema rechaza la petición porque el campo name está vacío.
   "Details": []
 }
 ```
-##Estado
+## Estado
 🟢 Funciona
 
-##Observaciones
+## Observaciones
 La validación ataja correctamente los datos inválidos devolviendo un 400.
 Nota técnica para el equipo: El array Details está llegando vacío. Sería ideal que a futuro el middleware mapee los errores del ModelState o de FluentValidation dentro de ese array para que el frontend sepa exactamente qué campo falló (ej: "Name: El campo es requerido").
-```
+
 # 26. Problemas encontrados
 
 Registrar aquí errores importantes descubiertos durante la refactorización.
 
 | Fecha      | Área        | Problema                                          | Solución                              | Estado |
 | ---------- | ----------- | ------------------------------------------------- | ------------------------------------- | ------ |
-| YYYY-MM-DD | Identity    | Roles con tipos incompatibles                     | Usar ApplicationRole                  | 🟢     |
-| YYYY-MM-DD | JWT         | El token identificaba incorrectamente al paciente | Utilizar ApplicationUser.Id           | 🟢     |
-| YYYY-MM-DD | Patient     | Relación entre contextos                          | Usar Patient.UserId                   | 🟢     |
-| YYYY-MM-DD | Persistence | DELETE físico                                     | Revisar implementación de soft delete | 🟡     |
+| YYYY-MM-DD | Identity    | Roles con tipos incompatibles                     | Usar ApplicationRole                  | 🟢      |
+| YYYY-MM-DD | JWT         | El token identificaba incorrectamente al paciente | Utilizar ApplicationUser.Id           | 🟢      |
+| YYYY-MM-DD | Patient     | Relación entre contextos                          | Usar Patient.UserId                   | 🟢      |
+| YYYY-MM-DD | Persistence | DELETE físico                                     | Revisar implementación de soft delete | 🟡      |
 
 ---
 
@@ -1231,7 +1578,7 @@ Administrador
 
 # 30. Checklist de seguridad
 
-* [ ] Login de administrador público.
+* [X] Login de administrador público.
 * [ ] Login de paciente público.
 * [x] Resto de endpoints protegidos.
 * [x] Operaciones administrativas requieren `Administrador`.
@@ -1244,8 +1591,8 @@ Administrador
 * [x] Password mínima de 8 caracteres.
 * [x] Password almacenada mediante Identity.
 * [ ] Usuarios eliminados no pueden autenticarse.
-* [ ] JWT utiliza `ApplicationUser.Id`.
-* [ ] JWT contiene el rol correspondiente.
+* [X] JWT utiliza `ApplicationUser.Id`.
+* [X] JWT contiene el rol correspondiente.
 * [ ] No se filtra información sensible mediante errores de autenticación.
 
 ---
@@ -1272,8 +1619,8 @@ Administrador
 
 ## Authentication
 
-* [ ] Login Admin
-* [ ] Register Admin
+* [X] Login Admin
+* [X] Register Admin
 * [ ] Login Patient
 
 ## Specialty

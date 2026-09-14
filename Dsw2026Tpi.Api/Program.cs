@@ -1,5 +1,6 @@
 using Dsw2026Tpi.Api.Configurations;
 using Dsw2026Tpi.Api.Middlewares;
+using Dsw2026Tpi.Data.Identity;
 using Serilog;
 
 namespace Dsw2026Tpi.Api;
@@ -32,6 +33,11 @@ public class Program
             builder.Services.AddHealthChecks();
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                await IdentitySeeder.SeedAsync(scope.ServiceProvider);
+            }
 
             app.UseSerilogRequestLogging();
 
