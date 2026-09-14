@@ -940,6 +940,7 @@ HTTP 200
 
 
 
+```
 
 ### Registro de Prueba: PUT Specialty
 ### Endpoint
@@ -1012,6 +1013,36 @@ HTTP 200
     }
   ]
 }
+```
+
+```
+
+### Registro de Prueba: DELETE Specialty (Soft Delete)
+
+### Endpoint
+DELETE /api/specialties/3d115c87-0227-4ecd-ad80-3e43b9de7e7f
+
+### Usuario utilizado
+Administrador
+
+### Request
+*(No requiere body)*
+
+### Resultado esperado
+HTTP 200 OK o 204 No Content (y confirmación de borrado lógico en base de datos).
+
+### Resultado obtenido
+HTTP 204 No Content
+
+### Response
+*(Vacío)*
+
+### Estado
+🟢 Funciona
+
+### Observaciones
+El endpoint responde correctamente con un código 204 (operación exitosa sin contenido extra para mostrar). Se verifica el cumplimiento del Soft Delete establecido en la regla de negocio.
+
 ```
 
 
