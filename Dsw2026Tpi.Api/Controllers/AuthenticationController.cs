@@ -18,7 +18,6 @@ public class AuthenticationController : AppController
         _authenticationService = authenticationService;
     }
 
-    //FUNCIONA
     [HttpPost("admin/register")]
     [Authorize(Policy = Policies.AdminPolicy)]
     [EnableRateLimiting("GeneralPolicy")]
