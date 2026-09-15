@@ -1,10 +1,11 @@
 ﻿namespace Dsw2026Tpi.Domain.Entities;
 
-public class Specialty: EntityBase
+public class Specialty : EntityBase
 {
-    public string Name { get; set; }
-    public string Description { get; set; }
-    public bool IsDeleted { get; private set; } 
+    public string Name { get; private set; } = string.Empty;
+    public string Description { get; private set; } = string.Empty;
+    public bool IsDeleted { get; private set; }
+    public ICollection<Doctor> Doctors { get; private set; } = new List<Doctor>();
 
     #region Constructor for EF
 #pragma warning disable CS8618
@@ -16,10 +17,14 @@ public class Specialty: EntityBase
     {
         Name = name;
         Description = description;
+        IsDeleted = false;
     }
 
-    public void Desactivate()
+    public void Update(string name, string description)
     {
-        IsDeleted = true;
+        Name = name;
+        Description = description;
     }
+
+    public void Desactivate() => IsDeleted = true;
 }

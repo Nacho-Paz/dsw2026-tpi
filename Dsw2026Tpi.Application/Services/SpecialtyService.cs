@@ -2,8 +2,6 @@
 using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.Domain.Interfaces;
 using Dsw2026Tpi.Domain.Entities;
-
-
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Resources;
 using Microsoft.Extensions.Logging;
@@ -20,60 +18,46 @@ namespace Dsw2026Tpi.Application.Services
             _logger = logger;
         }
 
-        public async Task<Pagination<SpecialtyModel>> GetSpecialties(SpecialtyQueryFilter filter)
-
+        public async Task<PaginatedResponse<SpecialtyModel>> GetSpecialties(SpecialtyQueryFilter filter)
         {
-            var specialitiesList = await _persistence.GetFiltered<Specialty>(
-                s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name))); 
+            var pagedSpecialties = await _persistence.Paginate<Specialty, string>(
+                filter.PageSize,
+                filter.PageIndex,
+                s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name)),
+                s => s.Name
+            );
 
-
-            if (specialitiesList == null || !specialitiesList.Any())
+            if (pagedSpecialties.Data == null || !pagedSpecialties.Data.Any())
             {
                 _logger.LogWarning("No se encontraron especialidades que coincidan con los criterios de búsqueda.");
                 throw new EntityNotFoundException("Specialty");
             }
 
-            var query = specialitiesList.ToList();
-
-
-            var totalRecords = query.Count();
-            if (totalRecords == 0)
+            return new PaginatedResponse<SpecialtyModel>
             {
-                return Pagination<SpecialtyModel>.Empty;
-            }
-
-            var pagedData = query
-                .Skip((filter.PageIndex - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToList();
-
-            var paginationResult = new Pagination<Specialty>(
-                filter.PageSize,
-                filter.PageIndex,
-                totalRecords,
-                pagedData
-
-                );
-
-            return paginationResult.Map(s => new SpecialtyModel
-            {
-                Id = s.Id,
-                Name = s.Name,
-                Description = s.Description
-            });
-
+                pageSize = pagedSpecialties.PageSize,
+                pageIndex = pagedSpecialties.PageIndex,
+                Total = pagedSpecialties.Total,
+                data = pagedSpecialties.Data.Select(s => new SpecialtyModel
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Description = s.Description
+                })
+            };
         }
 
+        ///FUNCIONA BIEN//
         public async Task<SpecialtyModel> Createspecialty(SpecialtyCreateModel model)
-
         {
             _logger.LogInformation("Iniciando la creación de una nueva especialidad con el nombre: {Name}", model.Name);
 
-            if (model.Name==null || model.Description == null){
+            if (model.Name == null || model.Description == null)
+            {
                 _logger.LogWarning("Error de validación: Nombre o descripción nulos.");
                 throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
             }
-            if(model.Name.Length < 3 || model.Name.Length > 100)
+            if (model.Name.Length < 3 || model.Name.Length > 100)
             {
                 _logger.LogWarning("Error de validación: El nombre debe tener entre 3 y 100 caracteres.");
                 throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
@@ -84,7 +68,6 @@ namespace Dsw2026Tpi.Application.Services
                 throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
             }
 
-    
             var newSpeciality = new Specialty(model.Name, model.Description);
             await _persistence.Add(newSpeciality);
             _logger.LogInformation("Especialidad creada exitosamente con ID: {Id}", newSpeciality.Id);
@@ -95,11 +78,10 @@ namespace Dsw2026Tpi.Application.Services
                 Name = newSpeciality.Name,
                 Description = newSpeciality.Description
             };
-
         }
+
         public async Task<SpecialtyModel> UpdateSpecialty(Guid id, SpecialtyCreateModel model)
         {
-
             _logger.LogInformation("Iniciando la actualización de la especialidad con ID: {Id}", id);
 
             if (model.Name == null || model.Description == null)
@@ -110,7 +92,7 @@ namespace Dsw2026Tpi.Application.Services
             if (model.Name.Length < 3 || model.Name.Length > 100)
             {
                 _logger.LogWarning("Error de validación: El nombre debe tener entre 3 y 100 caracteres.");
-                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);        
+                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
             }
             if (model.Description.Length < 10 || model.Description.Length > 100)
             {
@@ -121,8 +103,7 @@ namespace Dsw2026Tpi.Application.Services
             var existingEntity = await _persistence.First<Specialty>(s => s.Id == id);
             if (existingEntity == null || existingEntity.IsDeleted) return null;
 
-            existingEntity.Name = model.Name;
-            existingEntity.Description = model.Description;
+            existingEntity.Update(model.Name, model.Description);
 
             await _persistence.Update(existingEntity);
             _logger.LogInformation("Especialidad con ID: {Id} actualizada exitosamente.", id);
@@ -151,7 +132,6 @@ namespace Dsw2026Tpi.Application.Services
             _logger.LogInformation("Especialidad con ID: {Id} desactivada exitosamente.", id);
             return true;
         }
-
     }
 }
 

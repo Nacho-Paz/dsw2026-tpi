@@ -19,11 +19,8 @@ public class AuthenticationController : AppController
     }
 
     [HttpPost("admin/register")]
-    //[Authorize(Roles = Roles.Administrator)]
-    //[EnableRateLimiting("GeneralPolicy")] //Sacar para crear
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-    //[ProducesResponseType(StatusCodes.Status409Conflict)]
+    [Authorize(Policy = Policies.AdminPolicy)]
+    [EnableRateLimiting("GeneralPolicy")]
     public async Task<IActionResult> Register([FromBody] RegisterModel.Request request)
     {
         var result = await _authenticationService.Register(request);
@@ -33,10 +30,6 @@ public class AuthenticationController : AppController
     [HttpPost("admin/login")]
     [AllowAnonymous]
     [EnableRateLimiting("AdminLogin")]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-    //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    //[ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> LoginAdmin([FromBody] LoginAdminModel.Request request)
     {
         var result = await _authenticationService.LoginAdmin(request);
@@ -46,15 +39,10 @@ public class AuthenticationController : AppController
     [HttpPost("patient/login")]
     [AllowAnonymous]
     [EnableRateLimiting("PatientLogin")]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-    //[ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    //[ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> LoginPatient(
         [FromBody] LoginPatientModel.Request request)
     {
         var result = await _authenticationService.LoginPatient(request);
-
         return Ok(result);
     }
 }

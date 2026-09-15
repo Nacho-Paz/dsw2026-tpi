@@ -21,16 +21,13 @@ public class DoctorController : AppController
     }
 
     [HttpGet]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll([FromQuery]int pageSize, [FromQuery]int pageIndex, [FromQuery]string? name = null)
+    public async Task<IActionResult> GetAll([FromQuery] int pageSize, [FromQuery] int pageIndex, [FromQuery] string? name = null)
     {
         var doctors = await _service.GetAll(pageSize, pageIndex, name);
         return Ok(doctors);
     }
 
     [HttpGet("{id:guid}/availabilities")]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAvailabilities(Guid id)
     {
         var availabilities = await _service.GetDoctorAvailabilities(id);
@@ -42,8 +39,6 @@ public class DoctorController : AppController
     }
 
     [HttpPost]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] DoctorModel.Request model)
     {
         var createdDoctor = await _service.CreateDoctor(model);
@@ -55,8 +50,6 @@ public class DoctorController : AppController
     }
 
     [HttpPut("{id:guid}")]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(Guid id, [FromBody] DoctorModel.Request model)
     {
         var updatedDoctor = await _service.UpdateDoctor(id, model);
@@ -68,8 +61,6 @@ public class DoctorController : AppController
     }
 
     [HttpDelete("{id:guid}")]
-    //[ProducesResponseType(StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var success = await _service.DeleteDoctor(id);

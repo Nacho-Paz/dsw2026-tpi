@@ -8,8 +8,8 @@ public class AvailabilityRule : EntityBase
     public DayOfWeek DayOfWeek { get; set; }
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
-    public bool Deleted { get; set; } = false; 
-    public Doctor Doctor { get; set; }
+    public bool Deleted { get; set; } = false;
+    public Doctor Doctor { get; set; } = null!;
     public ICollection<AvailabilitySlot> Slots { get; set; } = new List<AvailabilitySlot>();
 
     #region Constructor for EF
@@ -19,5 +19,4 @@ public class AvailabilityRule : EntityBase
     }
 #pragma warning restore CS8618
     #endregion
-
 }

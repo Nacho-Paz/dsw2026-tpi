@@ -13,7 +13,12 @@ public class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
         builder.HasKey(d => d.Id);
         builder.Property(d => d.Name).IsRequired().HasMaxLength(100);
         builder.Property(d => d.LicenseNumber).IsRequired().HasMaxLength(20);
-        builder.HasOne(d => d.Speciality).WithMany().HasForeignKey(d => d.SpecialityId);
-
+        builder.Property(d => d.SpecialityId).IsRequired();
+        builder.Property(x => x.IsActive).IsRequired().HasDefaultValue(true);
+        builder.HasOne(x => x.Speciality)
+            .WithMany(x => x.Doctors)
+            .HasForeignKey(x => x.SpecialityId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(x => x.LicenseNumber).IsUnique();
     }
 }
