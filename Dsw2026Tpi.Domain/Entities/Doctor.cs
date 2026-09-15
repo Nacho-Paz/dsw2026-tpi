@@ -5,11 +5,11 @@ public class Doctor : EntityBase
     public string Name { get; private set; } = string.Empty;
     public string LicenseNumber { get; private set; } = string.Empty;
     public bool IsActive { get; private set; }
+
     public Guid SpecialtyId { get; set; }
     public Specialty Specialty { get; private set; } = null!;
 
-    public ICollection<AvailabilityRule> AvailabilityRules
-    { get; private set; } = new List<AvailabilityRule>();
+    public ICollection<AvailabilityRule> AvailabilityRules { get; private set; } = new List<AvailabilityRule>();
 
     #region Constructor for EF
 #pragma warning disable CS8618
@@ -27,6 +27,7 @@ public class Doctor : EntityBase
         SpecialtyId = specialty.Id;
         IsActive = true;
     }
+
     public void UpdateData(string name, string licenseNumber, Specialty specialty)
     {
         Name = name;
@@ -35,5 +36,8 @@ public class Doctor : EntityBase
         SpecialtyId = specialty.Id;
     }
 
-    public void Deactivate() => IsActive = false;
+    public void Deactivate()
+    {
+        IsActive = false;
+    }
 }
