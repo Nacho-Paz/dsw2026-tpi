@@ -50,17 +50,17 @@ backend-fixes
 
 | Área                  | Estado        | Observaciones                                |
 | --------------------- | ------------- | -------------------------------------------- |
-| Autenticación         | 🔵 En revisión | Se está revisando JWT, Identity y login      |
+| Autenticación         | 🟢 Funciona    | Se está revisando JWT, Identity y login      |
 | Administradores       | 🟢 Funciona    | Login y registro                             |
-| Pacientes             | 🔵 En revisión | Primer acceso y asociación con Identity      |
+| Pacientes             | 🟢 Funciona    | Primer acceso y asociación con Identity      |
 | Especialidades        | 🟡 En revisión | CRUD                                         |
 | Médicos               | 🟡 En revisión | CRUD y relación con especialidad             |
 | Disponibilidades      | 🟡 En revisión | Reglas mensuales y generación de slots       |
 | Turnos                | 🟡 En revisión | Reserva, cancelación y estados               |
 | EF Core               | 🔵 En revisión | Relaciones, índices y configuraciones        |
 | Soft Delete           | ⚪ No probado  | Verificar todos los DELETE                   |
-| JWT                   | 🔵 En revisión | Claims, roles y validación                   |
-| Manejo de excepciones | 🟡 En revisión | Validar detalles y códigos                   |
+| JWT                   | 🟢 Funciona    | Claims, roles y validación                   |
+| Manejo de excepciones | 🔵 En revisión | Validar detalles y códigos                   |
 | Pruebas de endpoints  | 🟡 En progreso | Actualizar esta tabla a medida que se pruebe |
 
 > Los estados deben actualizarse durante el desarrollo.
@@ -387,7 +387,7 @@ Paciente
 
 ### Estado
 
-🟡 En revisión
+🟢 Funciona
 
 ---
 
@@ -791,7 +791,7 @@ Esta tabla debe ser la referencia rápida para saber qué parte del backend est�
 | --- | ------------ | ------ | ----------------------- | ------- | ------ | ------------- |
 | 1   | Admin        | POST   | `/...`                  | Público | 🟢      | -             |
 | 2   | Admin        | POST   | `/...`                  | Admin   | 🟢      | -             |
-| 3   | Patient      | POST   | `/...`                  | Público | 🟡      | -             |
+| 3   | Patient      | POST   | `/...`                  | Público | 🟢      | -             |
 | 4   | Specialty    | GET    | `/api/specialties`      | Admin   | 🟢      | 2026-09-14    |
 | 5   | Specialty    | GET    | `/api/specialties/{id}` | Admin   | 🟢      | 2026-09-14    |
 | 6   | Specialty    | POST   | `/api/specialties`      | Admin   | 🟢      | 2026-09-14    |
@@ -948,7 +948,7 @@ HTTP 400
   ]
 }
 ```
-
+---
 ### Endpoint
 - **/api/auth/admin/login**
 ### Usuario utilizado
@@ -985,8 +985,10 @@ HTTP 401
 ```
 
 ### Detalles
+
 La respuesta indica que el usuario o contraseña son incorrectos, por más que por ejemplo el correo electrónico si exista, ya que no se indicara que credencial ya se encuentra almacenada por cuestiones de seguridad.
 
+----
 ### Endpoint
 - **/api/auth/admin/login**
 ### Usuario utilizado
@@ -1020,6 +1022,7 @@ HTTP 200
   "role": "Administrador"
 }
 ```
+-----
 ### Endpoint
 - **/api/auth/admin/register**
 ### Usuario utilizado
@@ -1044,7 +1047,7 @@ HTTP 401
 ```text
 HTTP 401 No Content
 ```
-
+-----
 ### Endpoint
 - **/api/auth/admin/register**
 ### Usuario utilizado
@@ -1084,7 +1087,7 @@ HTTP 400
   ]
 }
 ```
-
+-----
 ### Endpoint
 - **/api/auth/admin/register**
 ### Usuario utilizado
@@ -1144,7 +1147,7 @@ HTTP 409
   ]
 }
 ```
-
+------
 ### Endpoint
 - **/api/auth/admin/register**
 ### Usuario utilizado
@@ -1188,7 +1191,7 @@ HTTP 409
   ]
 }
 ```
-
+------
 ### Endpoint
 - **/api/auth/admin/register**
 ### Usuario utilizado
@@ -1213,6 +1216,7 @@ HTTP 200
 ```text
 HTTP 200 No Content
 ```
+-------
 ### Endpoint
 - **/api/auth/admin/register**
 ### Usuario utilizado
@@ -1254,7 +1258,358 @@ HTTP 400
   "traceId": "00-226ab1117e0e9c3b9b7f8d295486dba5-81632bda48b5b81e-00"
 }
 ```
+-------
+### Endpoint
+- **/api/auth/admin/register**
+### Usuario utilizado
+Paciente
 
+### Request
+```json
+{
+  "email": "nacho@gmail.com",
+  "password": "Qwerty1234/"
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 403
+```
+
+### Resultado obtenido
+
+```text
+HTTP 403 No Content
+```
+
+-------
+### Endpoint
+- **/api/auth/patient/login**
+### Usuario utilizado
+Indiferente
+
+### Request
+```json
+{
+  "email": "string",
+  "dni": 0
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 400
+```
+
+### Resultado obtenido
+
+```text
+HTTP 400
+```
+### Response
+
+```json
+{
+  "ErrorCode": "VALIDATION_ERROR",
+  "Message": "Uno o más errores de validación ocurrieron",
+  "Details": [
+    {
+      "Field": "email",
+      "Issue": "Email is invalid"
+    }
+  ]
+}
+```
+-------
+### Endpoint
+- **/api/auth/patient/login**
+### Usuario utilizado
+Indiferente
+
+### Request
+```json
+{
+  "email": "nacho@gmail.com",
+  "dni": 0
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 400
+```
+
+### Resultado obtenido
+
+```text
+HTTP 400
+```
+### Response
+
+```json
+{
+  "ErrorCode": "VALIDATION_ERROR",
+  "Message": "Uno o más errores de validación ocurrieron",
+  "Details": [
+    {
+      "Field": "dni",
+      "Issue": "DNI is invalid"
+    }
+  ]
+}
+```
+-------
+### Endpoint
+- **/api/auth/patient/login**
+### Usuario utilizado
+Indiferente
+
+### Request
+```json
+{
+  "email": "nacho@gmail.com",
+  "dni": -45439750
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 400
+```
+
+### Resultado obtenido
+
+```text
+HTTP 400
+```
+### Response
+
+```json
+{
+  "ErrorCode": "VALIDATION_ERROR",
+  "Message": "Uno o más errores de validación ocurrieron",
+  "Details": [
+    {
+      "Field": "dni",
+      "Issue": "DNI is invalid"
+    }
+  ]
+}
+```
+-------
+### Endpoint
+- **/api/auth/patient/login**
+### Usuario utilizado
+Indiferente
+
+### Request
+```json
+{
+  "email": "paciente@gmail.com",
+  "dni": 1234567
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 200
+```
+
+### Resultado obtenido
+
+```text
+HTTP 200
+```
+### Response
+
+```json
+{
+  "token": "[token]",
+  "role": "Paciente"
+}
+```
+
+### Detalles
+
+Al ser este email registrado por primera vez, se creó un usuario con el rol de `Paciente` y un `Patient` con `Dni` 1234567.
+
+-------
+### Endpoint
+- **/api/auth/patient/login**
+### Usuario utilizado
+Indiferente
+
+### Request
+```json
+{
+  "email": "paciente@gmail.com",
+  "dni": 1234567
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 200
+```
+
+### Resultado obtenido
+
+```text
+HTTP 200
+```
+### Response
+
+```json
+{
+  "token": "[token]",
+  "role": "Paciente"
+}
+```
+
+### Detalles
+
+Al ya estar creado el usuario y el paciente, no se crean nuevos registros en la base de datos.
+
+-------
+### Endpoint
+- **/api/auth/patient/login**
+### Usuario utilizado
+Indiferente
+
+### Request
+```json
+{
+  "email": "paciente@gmail.com",
+  "dni": 12345678
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 401
+```
+
+### Resultado obtenido
+
+```text
+HTTP 401
+```
+### Response
+
+```json
+{
+  "ErrorCode": "AUTHENTICATION_FAILED",
+  "Message": "Usuario o contraseña incorrectos",
+  "Details": [
+    {
+      "Field": "Patient",
+      "Issue": "User Already Has Patient"
+    }
+  ]
+}
+```
+
+### Detalles
+
+El email ya esta registrado en la base de datos, pero no con ese DNI, por lo tanto no se permite el login y se indica que ya existe un paciente con ese email/usuario.
+
+-------
+### Endpoint
+- **/api/auth/patient/login**
+### Usuario utilizado
+Indiferente
+
+### Request
+```json
+{
+  "email": "paciente2@gmail.com",
+  "dni": 1234567
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 401
+```
+
+### Resultado obtenido
+
+```text
+HTTP 401
+```
+### Response
+
+```json
+{
+  "ErrorCode": "AUTHENTICATION_FAILED",
+  "Message": "Usuario o contraseña incorrectos",
+  "Details": [
+    {
+      "Field": "Credentials",
+      "Issue": "Invalid Credentials"
+    }
+  ]
+}
+```
+
+### Detalles
+
+El DNI ya esta registrado en la base de datos, pero no con ese email, por lo tanto no se permite el login y se indica que hubo un error de credenciales. No indico que el email no existe o es  erróneo, por cuestiones de seguridad.
+
+-------
+### Endpoint
+- **/api/auth/patient/login**
+### Usuario utilizado
+Indiferente
+
+### Request
+```json
+{
+  "email": "admin@dws2026.prueba",
+  "dni": 1234567
+}
+```
+
+### Resultado esperado
+
+```text
+HTTP 401
+```
+
+### Resultado obtenido
+
+```text
+HTTP 401
+```
+### Response
+
+```json
+{
+  "ErrorCode": "AUTHENTICATION_FAILED",
+  "Message": "Usuario o contraseña incorrectos",
+  "Details": [
+    {
+      "Field": "Credentials",
+      "Issue": "Invalid Credentials"
+    }
+  ]
+}
+```
+
+### Detalles
+
+Esto falla porque el email es el de administrador, no el de paciente, es decir el usuario ya tiene un rol asociado.
+
+-----
 ## MODULO - SPECIALTIES
 
 ### Endpoint
