@@ -27,7 +27,7 @@ namespace PruebasUnitariasTpi
             
                 Name: "Juan Pérez",
                 LicenseNumber: "MP12345",
-                SpecialityId: specialityId
+                SpecialtyId: specialityId
             );
 
             _mockPersistence.First<Specialty>(Arg.Any<System.Linq.Expressions.Expression<Func<Specialty, bool>>>())

@@ -47,7 +47,6 @@ namespace Dsw2026Tpi.Application.Services
             };
         }
 
-        ///FUNCIONA BIEN//
         public async Task<SpecialtyModel> Createspecialty(SpecialtyCreateModel model)
         {
             _logger.LogInformation("Iniciando la creación de una nueva especialidad con el nombre: {Name}", model.Name);
@@ -67,7 +66,13 @@ namespace Dsw2026Tpi.Application.Services
                 _logger.LogWarning("Error de validación: La descripción debe tener entre 10 y 100 caracteres.");
                 throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
             }
-
+            var existingSpecialties = await _persistence.GetFiltered<Specialty>(s => s.Name == model.Name && !s.IsDeleted);
+            if (existingSpecialties != null && existingSpecialties.Any())
+            {
+                _logger.LogWarning("Intento de creación fallido: La especialidad {Name} ya existe.", model.Name);
+                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR)
+                    .WithDetail("Name", "Ya existe una especialidad registrada con este nombre.");
+            }
             var newSpeciality = new Specialty(model.Name, model.Description);
             await _persistence.Add(newSpeciality);
             _logger.LogInformation("Especialidad creada exitosamente con ID: {Id}", newSpeciality.Id);

@@ -32,20 +32,21 @@ public class DoctorService : IDoctorService
         pageIndex,
         d => d.IsActive && (string.IsNullOrWhiteSpace(name) || d.Name.Contains(name)),
         x => x.Name,
-        nameof(Doctor.Speciality));
+        nameof(Doctor.Specialty));
 
         return doctors.Map(d => new DoctorModel.Response(d.Id, d.Name, d.LicenseNumber,
-            new DoctorModel.SpecialityDto(d.Speciality?.Id, d.Speciality?.Name)));
+            new DoctorModel.SpecialtyDto(d.Specialty?.Id, d.Specialty?.Name)));
     }
 
     public async Task<List<DoctorModel.AvailabilityResponse>> GetDoctorAvailabilities(Guid doctorId)
     {
-        var doctor = await _persistence.First<Doctor>(d => d.Id == doctorId && d.IsActive);
-        if (doctor == null)
+        var doctorList = await _persistence.GetFiltered<Doctor>(d => d.Id == doctorId && d.IsActive);
+        if (doctorList == null || !doctorList.Any())
         {
             _logger.LogWarning("Médico con ID {DoctorId} no encontrado para consultar disponibilidades.", doctorId);
             throw new EntityNotFoundException("Doctor");
         }
+        var doctor = doctorList.First();
         var now = DateTime.Now;
         var rules = await _persistence.GetFiltered<AvailabilityRule>(
             r => r.DoctorId == doctorId && r.Month == now.Month && r.Year == now.Year && !r.Deleted,
@@ -78,22 +79,21 @@ public class DoctorService : IDoctorService
             _logger.LogWarning("Intento de creación de médico fallido por validación inválida.");
             throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
         }
-        var speciality = await _persistence.First<Specialty>(s => s.Id == model.SpecialityId && !s.IsDeleted);
-        if (speciality == null)
+        // 1. Buscamos la especialidad de forma segura con GetFiltered (evita que explote si no existe)
+        var specialtyList = await _persistence.GetFiltered<Specialty>(s => s.Id == model.specialtyId && !s.IsDeleted);
+        if (specialtyList == null || !specialtyList.Any())
         {
-            _logger.LogWarning("Especialidad con ID {SpecialityId} no encontrada al crear médico.", model.SpecialityId);
-            throw new EntityNotFoundException("Doctor");
+            _logger.LogWarning("Especialidad con ID {SpecialtyId} no encontrada al crear médico.", model.specialtyId);
+            throw new EntityNotFoundException("Specialty");
         }
-
-        //NO TERMINE DEBO VERIFICAR SI SE CREA
-        var existingLicense = await _persistence.First<Doctor>(d => d.LicenseNumber == model.LicenseNumber);
-        if (existingLicense != null)
+        var speciality = specialtyList.First(); 
+        var existingLicenseList = await _persistence.GetFiltered<Doctor>(d => d.LicenseNumber == model.LicenseNumber);
+        if (existingLicenseList != null && existingLicenseList.Any())
         {
             _logger.LogWarning("Intento de creación fallido: La matrícula {LicenseNumber} ya existe.", model.LicenseNumber);
             throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR)
                 .WithDetail("LicenseNumber", "Ya existe un médico registrado con esta matrícula.");
         }
-
         var newDoctor = new Doctor(model.Name, model.LicenseNumber, speciality);
         await _persistence.Add(newDoctor);
         _logger.LogInformation("Médico creado exitosamente con ID {DoctorId}", newDoctor.Id);
@@ -102,7 +102,7 @@ public class DoctorService : IDoctorService
             newDoctor.Id,
             newDoctor.Name,
             newDoctor.LicenseNumber,
-            new DoctorModel.SpecialityDto(speciality.Id, speciality.Name));
+            new DoctorModel.SpecialtyDto(speciality.Id, speciality.Name));
     }
 
     public async Task<DoctorModel.Response?> UpdateDoctor(Guid id, DoctorModel.Request model)
@@ -124,12 +124,13 @@ public class DoctorService : IDoctorService
             _logger.LogWarning("Validación fallida: La longitud del nombre no es válida para el ID {DoctorId}.", id);
             throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
         }
-        var speciality = await _persistence.First<Specialty>(s => s.Id == model.SpecialityId && !s.IsDeleted);
-        if (speciality == null)
+        var specialtyList = await _persistence.GetFiltered<Specialty>(s => s.Id == model.specialtyId && !s.IsDeleted);
+        if (specialtyList == null || !specialtyList.Any())
         {
-            _logger.LogWarning("La especialidad con ID {SpecialityId} no fue encontrada al intentar actualizar el médico {DoctorId}.", model.SpecialityId, id);
-            throw new EntityNotFoundException("Doctor");
+            _logger.LogWarning("La especialidad con ID {SpecialtyId} no fue encontrada al intentar actualizar el médico {DoctorId}.", model.specialtyId, id);
+            throw new EntityNotFoundException("Specialty");
         }
+        var speciality = specialtyList.First();
 
         existingEntity.UpdateData(model.Name, model.LicenseNumber, speciality);
         await _persistence.Update(existingEntity);
@@ -138,7 +139,7 @@ public class DoctorService : IDoctorService
             existingEntity.Id,
             existingEntity.Name,
             existingEntity.LicenseNumber,
-            new DoctorModel.SpecialityDto(speciality.Id, speciality.Name));
+            new DoctorModel.SpecialtyDto(existingEntity.Specialty?.Id, existingEntity.Specialty?.Name));
     }
 
     public async Task<bool> DeleteDoctor(Guid id)
