@@ -274,8 +274,8 @@ public class AppointmentService : IAppointmentService
         (!specialtyId.HasValue || (a.AvailabilitySlot != null &&
             a.AvailabilitySlot.AvailabilityRule != null &&
             a.AvailabilitySlot.AvailabilityRule.Doctor != null &&
-            a.AvailabilitySlot.AvailabilityRule.Doctor.Speciality != null &&
-            a.AvailabilitySlot.AvailabilityRule.Doctor.Speciality.Id == specialtyId.Value));
+            a.AvailabilitySlot.AvailabilityRule.Doctor.Specialty != null &&
+            a.AvailabilitySlot.AvailabilityRule.Doctor.Specialty.Id == specialtyId.Value));
 
         System.Linq.Expressions.Expression<Func<Appointment, DateTime>> sortOrder = a => a.AvailabilitySlot.SlotDate;
 
@@ -305,8 +305,8 @@ public class AppointmentService : IAppointmentService
                 DoctorId: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Id ?? Guid.Empty,
                 Name: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Name ?? "",
                 Specialty: new AppointmentModel.SpecialtyInfo(
-                    SpecialtyId: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Speciality?.Id ?? Guid.Empty,
-                    Name: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Speciality?.Name ?? "")
+                    SpecialtyId: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Specialty?.Id ?? Guid.Empty,
+                    Name: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Specialty?.Name ?? "")
             )));
 
         _logger.LogInformation("Búsqueda de turnos exitosa");
