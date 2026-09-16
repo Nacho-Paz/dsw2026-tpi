@@ -74,8 +74,6 @@ public class AppointmentService : IAppointmentService
             Status = AppointmentStatus.BOOKED
         };
 
-        slot.Status = SlotStatus.BOOKED;
-
         try
         {
             await _persistence.Add(appointment);
@@ -206,8 +204,11 @@ public class AppointmentService : IAppointmentService
         appointment.CancelledAt = DateTime.Now;
         appointment.AvailabilitySlot.Status = SlotStatus.AVAILABLE;
 
-        await _persistence.Update(appointment);
-        await _persistence.Update(appointment.AvailabilitySlot);
+        await _persistence.ExecuteInTransactionAsync(async () =>
+        {
+            await _persistence.Update(appointment);
+            await _persistence.Update(appointment.AvailabilitySlot);
+        });
 
         _logger.LogInformation("Turno {AppointmentId} cancelado exitosamente. El slot asociado ({SlotId}) ha sido marcado como disponible.", appointmentId, appointment.AvailabilitySlotId);
     }
@@ -284,7 +285,7 @@ public class AppointmentService : IAppointmentService
             pageIndex,
             predicate,
             sortOrder,
-            "AvailabilitySlot.AvailabilityRule.Doctor.Speciality",
+            "AvailabilitySlot.AvailabilityRule.Doctor.Specialty",
             "Patient"
         );
 

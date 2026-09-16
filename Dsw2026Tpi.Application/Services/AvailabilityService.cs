@@ -54,7 +54,10 @@ public class AvailabilityService : IAvailabilityService
 
         var rules = await GenerateRulesAndSlots(request, now.Month, now.Year);
 
-        foreach (var rule in rules) await _persistence.Add(rule);
+        await _persistence.ExecuteInTransactionAsync(async () =>
+        {
+            foreach (var rule in rules) await _persistence.Add(rule);
+        });
 
         _logger.LogInformation("Las reglas de disponibilidad y sus respectivos turnos fueron generados y guardados exitosamente en la base de datos.");
         return MapToDto(rules);
@@ -118,11 +121,14 @@ public class AvailabilityService : IAvailabilityService
                 {
                     bookedSlot.AvailabilityRuleId = matchingRule.Id;
                     await _persistence.Update(bookedSlot);
+
+                    if (matchingRule.Slots == null) matchingRule.Slots = new List<AvailabilitySlot>();
+                    matchingRule.Slots.Add(bookedSlot);
                 }
                 else
                 {
-                    _logger.LogWarning($"El turno reservado del {bookedSlot.SlotDate:d} a las {bookedSlot.StartTime} no pudo migrarse: " +
-                                        "el médico ya no ofrece disponibilidad en ese día/horario. La regla se mantendrá activa.");
+                    _logger.LogWarning("El turno reservado del {SlotDate:d} a las {SlotTime} no pudo migrarse: el médico ya no ofrece disponibilidad en ese día/horario. " +
+                        "La regla se mantendrá activa.",bookedSlot.SlotDate, bookedSlot.StartTime);
                     unmigratedRuleIds.Add(bookedSlot.AvailabilityRuleId);
                 }
             }
