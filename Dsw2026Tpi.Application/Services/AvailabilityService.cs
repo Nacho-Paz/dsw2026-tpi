@@ -6,12 +6,17 @@ using Dsw2026Tpi.Domain.Entities;
 using Dsw2026Tpi.Domain.Enum;
 using Dsw2026Tpi.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Text.Json;
 
 namespace Dsw2026Tpi.Application.Services;
 
 public class AvailabilityService : IAvailabilityService
 {
+    private static HashSet<DateTime>? _cachedHolidays;
+    private static DateTime _holidaysLastModified = DateTime.MinValue;
+    private static readonly SemaphoreSlim _holidaysSemaphore = new SemaphoreSlim(1, 1);
+
     private readonly IPersistence _persistence;
     private readonly ILogger<AvailabilityService> _logger;
     public AvailabilityService(IPersistence persistence, ILogger<AvailabilityService> logger)
@@ -49,12 +54,14 @@ public class AvailabilityService : IAvailabilityService
 
         var rules = await GenerateRulesAndSlots(request, now.Month, now.Year);
 
-        foreach (var rule in rules) await _persistence.Add(rule);
+        await _persistence.ExecuteInTransactionAsync(async () =>
+        {
+            foreach (var rule in rules) await _persistence.Add(rule);
+        });
 
         _logger.LogInformation("Las reglas de disponibilidad y sus respectivos turnos fueron generados y guardados exitosamente en la base de datos.");
         return MapToDto(rules);
     }
-
 
     public async Task<List<AvailabilityModel.RuleResponse>> UpdateAvailabilitiesAsync(AvailabilityModel.Request request)
     {
@@ -71,8 +78,6 @@ public class AvailabilityService : IAvailabilityService
 
         var now = DateTime.Now;
 
-        _logger.LogInformation("Consultando reglas de disponibilidad previas para el mes en curso.");
-
         var rulesToDelete = await _persistence.GetFiltered<AvailabilityRule>(
             r => r.DoctorId == request.DoctorId
                 && r.Month == now.Month
@@ -81,42 +86,84 @@ public class AvailabilityService : IAvailabilityService
                 "Slots");
 
         var preservedSlots = new HashSet<(DateTime Date, TimeSpan Time)>();
+        var bookedSlots = new List<AvailabilitySlot>();
 
         if (rulesToDelete != null && rulesToDelete.Any())
         {
-            _logger.LogInformation("Se encontraron reglas previas. Procediendo a dar de baja los horarios libres y conservar los turnos que ya se encontraban reservados.");
             foreach (var rule in rulesToDelete)
             {
-                rule.Deleted = true;
                 if (rule.Slots != null)
                 {
-                    foreach (var slot in rule.Slots)
+                    foreach (var slot in rule.Slots.Where(s => s.Status == SlotStatus.BOOKED))
                     {
-                        if (slot.Status == SlotStatus.BOOKED)
-                        {
-                            preservedSlots.Add((slot.SlotDate.Date, slot.StartTime));
-                        }
-                        else
+                        preservedSlots.Add((slot.SlotDate.Date, slot.StartTime));
+                        bookedSlots.Add(slot);
+                    }
+                }
+            }
+        }
+
+        _logger.LogInformation("Generando las nuevas reglas de disponibilidad integrando los turnos previamente reservados.");
+        var newRules = await GenerateRulesAndSlots(request, now.Month, now.Year, preservedSlots);
+
+        await _persistence.ExecuteInTransactionAsync(async () =>
+        {
+            var unmigratedRuleIds = new HashSet<Guid>();
+
+            foreach (var bookedSlot in bookedSlots)
+            {
+                var matchingRule = newRules.FirstOrDefault(r =>
+                    r.DayOfWeek == bookedSlot.SlotDate.DayOfWeek
+                    && bookedSlot.StartTime >= r.StartTime
+                    && bookedSlot.EndTime <= r.EndTime);
+
+                if (matchingRule != null)
+                {
+                    bookedSlot.AvailabilityRuleId = matchingRule.Id;
+                    await _persistence.Update(bookedSlot);
+
+                    if (matchingRule.Slots == null) matchingRule.Slots = new List<AvailabilitySlot>();
+                    matchingRule.Slots.Add(bookedSlot);
+                }
+                else
+                {
+                    _logger.LogWarning("El turno reservado del {SlotDate:d} a las {SlotTime} no pudo migrarse: el médico ya no ofrece disponibilidad en ese día/horario. " +
+                        "La regla se mantendrá activa.",bookedSlot.SlotDate, bookedSlot.StartTime);
+                    unmigratedRuleIds.Add(bookedSlot.AvailabilityRuleId);
+                }
+            }
+
+            if (rulesToDelete != null && rulesToDelete.Any())
+            {
+                foreach (var rule in rulesToDelete)
+                {
+                    if (rule.Slots != null)
+                    {
+                        foreach (var slot in rule.Slots.Where(s => s.Status != SlotStatus.BOOKED))
                         {
                             slot.Deleted = true;
                         }
                     }
+
+                    if (!unmigratedRuleIds.Contains(rule.Id))
+                    {
+                        rule.Deleted = true;
+                    }
+
+                    await _persistence.Update(rule);
                 }
-
-                await _persistence.Update(rule);
             }
-        }
-        _logger.LogInformation("Generando las nuevas reglas de disponibilidad integrando los turnos previamente reservados.");
-
-        var newRules = await GenerateRulesAndSlots(request, now.Month, now.Year, preservedSlots);
-
-        foreach (var rule in newRules) await _persistence.Add(rule);
+            foreach (var rule in newRules)
+            {
+                await _persistence.Add(rule);
+            }
+        });
 
         _logger.LogInformation("El proceso de actualización de disponibilidades y reemplazo de horarios finalizó con éxito en la base de datos.");
 
         return MapToDto(newRules);
     }
-
+  
     private void ValidateRequest(AvailabilityModel.Request request)
     {
         if (request == null)
@@ -136,16 +183,41 @@ public class AvailabilityService : IAvailabilityService
     {
         _logger.LogInformation("Iniciando la validación y generación de reglas de disponibilidad y franjas horarias.");
 
+        var parsedTimes = new Dictionary<AvailabilityModel.DayRule, (TimeSpan StartTime, TimeSpan EndTime)>();
+
+        foreach (var dayRule in request.Days)
+        {
+            if (!TimeSpan.TryParse(dayRule.StartTime, out var startTime))
+            {
+                _logger.LogWarning("Validación fallida: El horario de inicio proporcionado tiene un formato inválido y no pudo ser procesado.");
+                throw new ConflictException("INVALID_TIME_FORMAT", $"El horario de inicio del día {dayRule.Day} tiene un formato inválido.");
+            }
+
+            if (!TimeSpan.TryParse(dayRule.EndTime, out var endTime))
+            {
+                _logger.LogWarning("Validación fallida: El horario de fin proporcionado tiene un formato inválido y no pudo ser procesado.");
+                throw new ConflictException("INVALID_TIME_FORMAT", $"El horario de fin del día {dayRule.Day} tiene un formato inválido.");
+            }
+
+            if (startTime >= endTime)
+            {
+                _logger.LogWarning("Validación fallida: Se ingresó un rango inválido donde el horario de inicio es posterior o igual al horario de cierre.");
+                throw new ConflictException("INVALID_TIME", $"El horario de inicio debe ser menor al de salida para el día {dayRule.Day}");
+            }
+
+            parsedTimes[dayRule] = (startTime, endTime);
+        }
+
+        _logger.LogInformation("Validación de formato de horarios completada. Procediendo a validar solapamientos.");
+
         var groupedDays = request.Days.GroupBy(d => d.Day.Trim().ToUpper());
 
         foreach (var group in groupedDays)
         {
-            var sortedRanges = group.Select(d => new
-            {
-                StartTime = TimeSpan.Parse(d.StartTime),
-                EndTime = TimeSpan.Parse(d.EndTime)
-            }).OrderBy(r => r.StartTime).ToList();
-
+            var sortedRanges = group
+                .Select(d => parsedTimes[d])
+                .OrderBy(r => r.StartTime)
+                .ToList();
 
             for (int i = 0; i < sortedRanges.Count - 1; i++)
             {
@@ -167,23 +239,7 @@ public class AvailabilityService : IAvailabilityService
 
         foreach (var dayRule in request.Days)
         {
-            if (!TimeSpan.TryParse(dayRule.StartTime, out var startTime))
-            {
-                _logger.LogWarning("Validación fallida: El horario de inicio proporcionado tiene un formato inválido y no pudo ser procesado.");
-                throw new ConflictException("INVALID_TIME_FORMAT", $"El horario de inicio del día {dayRule.Day} tiene un formato inválido.");
-            }
-
-            if (!TimeSpan.TryParse(dayRule.EndTime, out var endTime))
-            {
-                _logger.LogWarning("Validación fallida: El horario de fin proporcionado tiene un formato inválido y no pudo ser procesado.");
-                throw new ConflictException("INVALID_TIME_FORMAT", $"El horario de fin del día {dayRule.Day} tiene un formato inválido.");
-            }
-
-            if (startTime >= endTime)
-            {
-                _logger.LogWarning("Validación fallida: Se ingresó un rango inválido donde el horario de inicio es posterior o igual al horario de cierre.");
-                throw new ConflictException("INVALID_TIME", $"El horario de inicio debe ser menor al de salida para el día {dayRule.Day}");
-            }
+            var (startTime, endTime) = parsedTimes[dayRule];
 
             DayOfWeek targetDayOfWeek = MapDayOfWeek(dayRule.Day);
 
@@ -210,7 +266,6 @@ public class AvailabilityService : IAvailabilityService
                     while (currentSlotStart + duracionTurno <= endTime)
                     {
                         if (preservedSlots == null || !preservedSlots.Contains((currentDate.Date, currentSlotStart)))
-
                         {
                             rule.Slots.Add(new AvailabilitySlot
                             {
@@ -230,10 +285,10 @@ public class AvailabilityService : IAvailabilityService
 
             if (rule.Slots.Any()) rules.Add(rule);
         }
+
         _logger.LogInformation("La generación de las reglas y la fragmentación de los turnos en intervalos se completó de manera exitosa.");
         return rules;
     }
-
     private DayOfWeek MapDayOfWeek(string day)
     {
         string diaLimpio = day.Trim().ToUpper();
@@ -257,9 +312,6 @@ public class AvailabilityService : IAvailabilityService
 
     private async Task<HashSet<DateTime>> LoadHolidaysAsync()
     {
-        _logger.LogInformation("Iniciando la lectura y carga del archivo local de feriados del sistema.");
-
-        var holidays = new HashSet<DateTime>();
         string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "feriados.json");
 
         if (!File.Exists(filePath))
@@ -268,16 +320,44 @@ public class AvailabilityService : IAvailabilityService
             throw new ValidationException("No se encontró el archivo de feriados.", ErrorCodes.VALIDATION_ERROR);
         }
 
+        var currentModifiedTime = File.GetLastWriteTimeUtc(filePath);
 
-        var json = await File.ReadAllTextAsync(filePath);
-        var loadedHolidays = JsonSerializer.Deserialize<List<DateTime>>(json);
-
-        if (loadedHolidays != null)
+        if (_cachedHolidays != null && _holidaysLastModified >= currentModifiedTime)
         {
-            foreach (var date in loadedHolidays) holidays.Add(date.Date);
+            return _cachedHolidays;
         }
-        _logger.LogInformation("El archivo de feriados fue leído, decodificado y cargado exitosamente en memoria.");
-        return holidays;
+        await _holidaysSemaphore.WaitAsync();
+        try
+        {
+            if (_cachedHolidays != null && _holidaysLastModified >= currentModifiedTime)
+            {
+                return _cachedHolidays;
+            }
+
+            _logger.LogInformation("Iniciando la lectura y carga del archivo local de feriados del sistema.");
+
+            var json = await File.ReadAllTextAsync(filePath);
+            var loadedHolidays = JsonSerializer.Deserialize<List<DateTime>>(json);
+
+            var newHolidays = new HashSet<DateTime>();
+            if (loadedHolidays != null)
+            {
+                foreach (var date in loadedHolidays)
+                {
+                    newHolidays.Add(date.Date);
+                }
+            }
+            _cachedHolidays = newHolidays;
+            _holidaysLastModified = currentModifiedTime;
+
+            _logger.LogInformation("El archivo de feriados fue leído, decodificado y cargado exitosamente en caché de memoria.");
+
+            return _cachedHolidays;
+        }
+        finally
+        {
+            _holidaysSemaphore.Release();
+        }
     }
 
     private List<AvailabilityModel.RuleResponse> MapToDto(List<Domain.Entities.AvailabilityRule> rules)
