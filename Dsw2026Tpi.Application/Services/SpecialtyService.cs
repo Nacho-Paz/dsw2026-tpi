@@ -6,137 +6,136 @@ using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Resources;
 using Microsoft.Extensions.Logging;
 
-namespace Dsw2026Tpi.Application.Services
+namespace Dsw2026Tpi.Application.Services;
+
+public class SpecialtyService : ISpecialtyService
 {
-    public class SpecialtyService : ISpecialtyService
+    private readonly IPersistence _persistence;
+    private readonly ILogger<SpecialtyService> _logger;
+    public SpecialtyService(IPersistence persistence, ILogger<SpecialtyService> logger)
     {
-        private readonly IPersistence _persistence;
-        private readonly ILogger<SpecialtyService> _logger;
-        public SpecialtyService(IPersistence persistence, ILogger<SpecialtyService> logger)
+        _persistence = persistence;
+        _logger = logger;
+    }
+
+    public async Task<PaginatedResponse<SpecialtyModel>> GetSpecialties(SpecialtyQueryFilter filter)
+    {
+        var pagedSpecialties = await _persistence.Paginate<Specialty, string>(
+            filter.PageSize,
+            filter.PageIndex,
+            s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name)),
+            s => s.Name
+        );
+
+        if (pagedSpecialties.Data == null || !pagedSpecialties.Data.Any())
         {
-            _persistence = persistence;
-            _logger = logger;
+            _logger.LogWarning("No se encontraron especialidades que coincidan con los criterios de búsqueda.");
+            throw new EntityNotFoundException("Specialty");
         }
 
-        public async Task<PaginatedResponse<SpecialtyModel>> GetSpecialties(SpecialtyQueryFilter filter)
+        return new PaginatedResponse<SpecialtyModel>
         {
-            var pagedSpecialties = await _persistence.Paginate<Specialty, string>(
-                filter.PageSize,
-                filter.PageIndex,
-                s => !s.IsDeleted && (string.IsNullOrEmpty(filter.name) || s.Name.Contains(filter.name)),
-                s => s.Name
-            );
-
-            if (pagedSpecialties.Data == null || !pagedSpecialties.Data.Any())
+            pageSize = pagedSpecialties.PageSize,
+            pageIndex = pagedSpecialties.PageIndex,
+            Total = pagedSpecialties.Total,
+            data = pagedSpecialties.Data.Select(s => new SpecialtyModel
             {
-                _logger.LogWarning("No se encontraron especialidades que coincidan con los criterios de búsqueda.");
-                throw new EntityNotFoundException("Specialty");
-            }
+                Id = s.Id,
+                Name = s.Name,
+                Description = s.Description
+            })
+        };
+    }
 
-            return new PaginatedResponse<SpecialtyModel>
-            {
-                pageSize = pagedSpecialties.PageSize,
-                pageIndex = pagedSpecialties.PageIndex,
-                Total = pagedSpecialties.Total,
-                data = pagedSpecialties.Data.Select(s => new SpecialtyModel
-                {
-                    Id = s.Id,
-                    Name = s.Name,
-                    Description = s.Description
-                })
-            };
+    public async Task<SpecialtyModel> Createspecialty(SpecialtyCreateModel model)
+    {
+        _logger.LogInformation("Iniciando la creación de una nueva especialidad con el nombre: {Name}", model.Name);
+
+        if (model.Name == null || model.Description == null)
+        {
+            _logger.LogWarning("Error de validación: Nombre o descripción nulos.");
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
+        }
+        if (model.Name.Length < 3 || model.Name.Length > 100)
+        {
+            _logger.LogWarning("Error de validación: El nombre debe tener entre 3 y 100 caracteres.");
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
+        }
+        if (model.Description.Length < 10 || model.Description.Length > 100)
+        {
+            _logger.LogWarning("Error de validación: La descripción debe tener entre 10 y 100 caracteres.");
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
+        }
+        var existingSpecialties = await _persistence.GetFiltered<Specialty>(s => s.Name == model.Name && !s.IsDeleted);
+        if (existingSpecialties != null && existingSpecialties.Any())
+        {
+            _logger.LogWarning("Intento de creación fallido: La especialidad {Name} ya existe.", model.Name);
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR)
+                .WithDetail("Name", "Ya existe una especialidad registrada con este nombre.");
+        }
+        var newSpeciality = new Specialty(model.Name, model.Description);
+        await _persistence.Add(newSpeciality);
+        _logger.LogInformation("Especialidad creada exitosamente con ID: {Id}", newSpeciality.Id);
+
+        return new SpecialtyModel
+        {
+            Id = newSpeciality.Id,
+            Name = newSpeciality.Name,
+            Description = newSpeciality.Description
+        };
+    }
+
+    public async Task<SpecialtyModel> UpdateSpecialty(Guid id, SpecialtyCreateModel model)
+    {
+        _logger.LogInformation("Iniciando la actualización de la especialidad con ID: {Id}", id);
+
+        if (model.Name == null || model.Description == null)
+        {
+            _logger.LogWarning("Error de validación: Nombre o descripción nulos.");
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
+        }
+        if (model.Name.Length < 3 || model.Name.Length > 100)
+        {
+            _logger.LogWarning("Error de validación: El nombre debe tener entre 3 y 100 caracteres.");
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
+        }
+        if (model.Description.Length < 10 || model.Description.Length > 100)
+        {
+            _logger.LogWarning("Error de validación: La descripción debe tener entre 10 y 100 caracteres.");
+            throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
         }
 
-        public async Task<SpecialtyModel> Createspecialty(SpecialtyCreateModel model)
+        var existingEntity = await _persistence.First<Specialty>(s => s.Id == id);
+        if (existingEntity == null || existingEntity.IsDeleted) return null;
+
+        existingEntity.Update(model.Name, model.Description);
+
+        await _persistence.Update(existingEntity);
+        _logger.LogInformation("Especialidad con ID: {Id} actualizada exitosamente.", id);
+
+        return new SpecialtyModel
         {
-            _logger.LogInformation("Iniciando la creación de una nueva especialidad con el nombre: {Name}", model.Name);
+            Id = existingEntity.Id,
+            Name = existingEntity.Name,
+            Description = existingEntity.Description
+        };
+    }
+    public async Task<bool> DeleteSpecialty(Guid id)
+    {
+        _logger.LogInformation("Iniciando la desactivación de la especialidad con ID: {Id}", id);
 
-            if (model.Name == null || model.Description == null)
-            {
-                _logger.LogWarning("Error de validación: Nombre o descripción nulos.");
-                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
-            }
-            if (model.Name.Length < 3 || model.Name.Length > 100)
-            {
-                _logger.LogWarning("Error de validación: El nombre debe tener entre 3 y 100 caracteres.");
-                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
-            }
-            if (model.Description.Length < 10 || model.Description.Length > 100)
-            {
-                _logger.LogWarning("Error de validación: La descripción debe tener entre 10 y 100 caracteres.");
-                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
-            }
-            var existingSpecialties = await _persistence.GetFiltered<Specialty>(s => s.Name == model.Name && !s.IsDeleted);
-            if (existingSpecialties != null && existingSpecialties.Any())
-            {
-                _logger.LogWarning("Intento de creación fallido: La especialidad {Name} ya existe.", model.Name);
-                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR)
-                    .WithDetail("Name", "Ya existe una especialidad registrada con este nombre.");
-            }
-            var newSpeciality = new Specialty(model.Name, model.Description);
-            await _persistence.Add(newSpeciality);
-            _logger.LogInformation("Especialidad creada exitosamente con ID: {Id}", newSpeciality.Id);
+        var existingEntity = await _persistence.First<Specialty>(s => s.Id == id);
+        if (existingEntity == null || existingEntity.IsDeleted)
+        {
+            _logger.LogWarning("Especialidad con ID: {Id} no encontrada o ya eliminada.", id);
+            throw new EntityNotFoundException("Specialty");
 
-            return new SpecialtyModel
-            {
-                Id = newSpeciality.Id,
-                Name = newSpeciality.Name,
-                Description = newSpeciality.Description
-            };
         }
 
-        public async Task<SpecialtyModel> UpdateSpecialty(Guid id, SpecialtyCreateModel model)
-        {
-            _logger.LogInformation("Iniciando la actualización de la especialidad con ID: {Id}", id);
-
-            if (model.Name == null || model.Description == null)
-            {
-                _logger.LogWarning("Error de validación: Nombre o descripción nulos.");
-                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
-            }
-            if (model.Name.Length < 3 || model.Name.Length > 100)
-            {
-                _logger.LogWarning("Error de validación: El nombre debe tener entre 3 y 100 caracteres.");
-                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
-            }
-            if (model.Description.Length < 10 || model.Description.Length > 100)
-            {
-                _logger.LogWarning("Error de validación: La descripción debe tener entre 10 y 100 caracteres.");
-                throw new ValidationException(nameof(ErrorCodes.VALIDATION_ERROR), ErrorCodes.VALIDATION_ERROR);
-            }
-
-            var existingEntity = await _persistence.First<Specialty>(s => s.Id == id);
-            if (existingEntity == null || existingEntity.IsDeleted) return null;
-
-            existingEntity.Update(model.Name, model.Description);
-
-            await _persistence.Update(existingEntity);
-            _logger.LogInformation("Especialidad con ID: {Id} actualizada exitosamente.", id);
-
-            return new SpecialtyModel
-            {
-                Id = existingEntity.Id,
-                Name = existingEntity.Name,
-                Description = existingEntity.Description
-            };
-        }
-        public async Task<bool> DeleteSpecialty(Guid id)
-        {
-            _logger.LogInformation("Iniciando la desactivación de la especialidad con ID: {Id}", id);
-
-            var existingEntity = await _persistence.First<Specialty>(s => s.Id == id);
-            if (existingEntity == null || existingEntity.IsDeleted)
-            {
-                _logger.LogWarning("Especialidad con ID: {Id} no encontrada o ya eliminada.", id);
-                throw new EntityNotFoundException("Specialty");
-
-            }
-
-            existingEntity.Desactivate();
-            await _persistence.Update(existingEntity);
-            _logger.LogInformation("Especialidad con ID: {Id} desactivada exitosamente.", id);
-            return true;
-        }
+        existingEntity.Desactivate();
+        await _persistence.Update(existingEntity);
+        _logger.LogInformation("Especialidad con ID: {Id} desactivada exitosamente.", id);
+        return true;
     }
 }
 
