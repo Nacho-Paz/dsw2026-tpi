@@ -10,6 +10,7 @@ using Dsw2026Tpi.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using Dsw2026Tpi.CrossCutting.Exceptions;
 
 namespace PruebasUnitariasTPI
 {
@@ -23,7 +24,8 @@ namespace PruebasUnitariasTPI
         {
             // Arrange
             var service = new AppointmentService(_mockPersistence, _mockLogger);
-            var appointmentId = Guid.NewGuid();
+            var patientUserId = Guid.NewGuid();
+            var patient = new Patient(patientUserId, "12345678");
 
             var slotSimulado = new AvailabilitySlot
             {
@@ -31,14 +33,18 @@ namespace PruebasUnitariasTPI
                 Status = SlotStatus.BOOKED
             };
 
-            var turnoSimulado = new Appointment(appointmentId,slotSimulado.Id,null);
+            var turnoSimulado = new Appointment(patient.Id, slotSimulado.Id, "Consulta")
+            {
+                Patient = patient,
+                AvailabilitySlot = slotSimulado
+            };
 
             _mockPersistence
-                .First(Arg.Any<Expression<Func<Appointment, bool>>>(), Arg.Any<string>())
+                .First(Arg.Any<Expression<Func<Appointment, bool>>>(), Arg.Any<string[]>())
                 .Returns(Task.FromResult<Appointment?>(turnoSimulado));
 
             // Act
-            await service.CancelAppointmentAsync(appointmentId);
+            await service.CancelAppointmentAsync(turnoSimulado.Id, patientUserId);
 
             // Assert
             Assert.Equal(AppointmentStatus.CANCELLED, turnoSimulado.Status);
@@ -47,6 +53,29 @@ namespace PruebasUnitariasTPI
 
             await _mockPersistence.Received(1).Update(turnoSimulado);
             await _mockPersistence.Received(1).Update(turnoSimulado.AvailabilitySlot);
+        }
+
+        [Fact]
+        public async Task CancelAppointmentAsync_CuandoElTurnoEsDeOtroPaciente_EntoncesLanzaAuthorizationException()
+        {
+            // Arrange
+            var service = new AppointmentService(_mockPersistence, _mockLogger);
+            var patient = new Patient(Guid.NewGuid(), "12345678");
+            var turnoSimulado = new Appointment(patient.Id, Guid.NewGuid(), "Consulta")
+            {
+                Patient = patient,
+                AvailabilitySlot = new AvailabilitySlot { Status = SlotStatus.BOOKED }
+            };
+
+            _mockPersistence
+                .First(Arg.Any<Expression<Func<Appointment, bool>>>(), Arg.Any<string[]>())
+                .Returns(Task.FromResult<Appointment?>(turnoSimulado));
+
+            // Act / Assert
+            await Assert.ThrowsAsync<AuthorizationException>(
+                () => service.CancelAppointmentAsync(turnoSimulado.Id, Guid.NewGuid()));
+
+            await _mockPersistence.DidNotReceive().Update(Arg.Any<Appointment>());
         }
     }
 }

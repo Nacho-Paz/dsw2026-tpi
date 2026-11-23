@@ -145,11 +145,14 @@ public class AppointmentService : IAppointmentService
         }
     }
 
-    public async Task<object> GetActiveAppointmentsByPatientAsync(long dni)
+    public async Task<object> GetActiveAppointmentsByPatientAsync(long dni, Guid? patientUserId = null)
     {
         _logger.LogInformation("Consultando turnos activos para el paciente con DNI: {PatientDni}", dni);
 
-        var patient = await _persistence.First<Patient>(p => p.Dni == dni.ToString());
+        var patient = await _persistence.First<Patient>(
+            p => p.Dni == dni.ToString()
+                && !p.Deleted
+                && (!patientUserId.HasValue || p.UserId == patientUserId.Value));
 
         if (patient == null)
         {
@@ -180,18 +183,27 @@ public class AppointmentService : IAppointmentService
             Status = a.Status.ToString()
         }).ToList();
     }
-    public async Task CancelAppointmentAsync(Guid appointmentId)
+    public async Task CancelAppointmentAsync(Guid appointmentId, Guid? patientUserId = null)
     {
         _logger.LogInformation("Iniciando solicitud de cancelación");
 
         var appointment = await _persistence.First<Appointment>(
-            a => a.Id == appointmentId, "AvailabilitySlot"
+            a => a.Id == appointmentId, "AvailabilitySlot", "Patient"
         );
 
         if (appointment == null)
         {
             _logger.LogWarning("Cancelación fallida: No se encontró ningún turno registrado con el ID {AppointmentId}.", appointmentId);
             throw new ConflictException("APPOINTMENT_NOT_FOUND", "Turno no encontrado.");
+        }
+
+        if (patientUserId.HasValue && appointment.Patient?.UserId != patientUserId.Value)
+        {
+            _logger.LogWarning(
+                "El usuario paciente {UserId} intentó cancelar un turno ajeno {AppointmentId}.",
+                patientUserId.Value,
+                appointmentId);
+            throw new AuthorizationException();
         }
 
         if (appointment.Status != AppointmentStatus.BOOKED)
