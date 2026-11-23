@@ -27,7 +27,10 @@ public class AppointmentsController : ControllerBase
     [EnableRateLimiting("PatientBooking")]
     public async Task<IActionResult> Create([FromBody] AppointmentModel.Request request)
     {
-        var appointmentCreated = await _appointmentService.CreateAppointmentAsync(request);
+        var patientUserId = GetPatientUserId() ?? throw new AuthenticationException();
+        var appointmentCreated = await _appointmentService.CreateAppointmentAsync(
+            request,
+            patientUserId);
         return Created(string.Empty, appointmentCreated);
     }
 

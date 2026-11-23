@@ -21,12 +21,16 @@ public class AppointmentService : IAppointmentService
         _persistence = persistence;
         _logger = logger;
     }
-    public async Task<AppointmentModel.Response> CreateAppointmentAsync(AppointmentModel.Request request)
+    public async Task<AppointmentModel.Response> CreateAppointmentAsync(
+        AppointmentModel.Request request,
+        Guid patientUserId)
     {
         _logger.LogInformation("Iniciando solicitud de reserva de turno para el médico {DoctorId} y el slot {SlotId}.",
          request.DoctorId, request.AvailabilitySlotId);
 
         ValidateRequest(request);
+
+        if (patientUserId == Guid.Empty) throw new AuthenticationException();
 
         var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId);
 
@@ -59,11 +63,16 @@ public class AppointmentService : IAppointmentService
             throw new ConflictException("INVALID_DATE", "No se pueden reservar turnos pasados.");
         }
 
-        var patient = await _persistence.First<Patient>(p => p.Dni == request.Patient.Dni.ToString());
+        var patient = await _persistence.First<Patient>(
+            p => p.UserId == patientUserId
+                && p.Dni == request.Patient.Dni.ToString()
+                && !p.Deleted);
         if (patient == null)
         {
-            _logger.LogWarning("Paciente con DNI {PatientDni} no encontrado al intentar reservar el slot {SlotId}.", request.Patient.Dni, slot.Id);
-            throw new ConflictException("PATIENT_NOT_FOUND", "El paciente no existe en el sistema.");
+            _logger.LogWarning(
+                "El usuario {UserId} intentó reservar para un DNI que no le pertenece.",
+                patientUserId);
+            throw new AuthorizationException();
         }
 
         var appointment = new Appointment

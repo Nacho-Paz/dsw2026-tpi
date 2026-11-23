@@ -5,7 +5,9 @@ namespace Dsw2026Tpi.Application.Interfaces;
 
 public interface IAppointmentService
 {
-    Task<AppointmentModel.Response> CreateAppointmentAsync(AppointmentModel.Request request);
+    Task<AppointmentModel.Response> CreateAppointmentAsync(
+        AppointmentModel.Request request,
+        Guid patientUserId);
     Task CancelAppointmentAsync(Guid appointmentId, Guid? patientUserId = null);
     Task<object> GetActiveAppointmentsByPatientAsync(long dni, Guid? patientUserId = null);
     Task<object> GetAppointmentsByDateAsync(string date);
