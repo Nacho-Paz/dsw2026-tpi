@@ -21,12 +21,16 @@ public class AppointmentService : IAppointmentService
         _persistence = persistence;
         _logger = logger;
     }
-    public async Task<AppointmentModel.Response> CreateAppointmentAsync(AppointmentModel.Request request)
+    public async Task<AppointmentModel.Response> CreateAppointmentAsync(
+        AppointmentModel.Request request,
+        Guid patientUserId)
     {
         _logger.LogInformation("Iniciando solicitud de reserva de turno para el médico {DoctorId} y el slot {SlotId}.",
          request.DoctorId, request.AvailabilitySlotId);
 
         ValidateRequest(request);
+
+        if (patientUserId == Guid.Empty) throw new AuthenticationException();
 
         var doctor = await _persistence.First<Doctor>(d => d.Id == request.DoctorId);
 
@@ -59,11 +63,16 @@ public class AppointmentService : IAppointmentService
             throw new ConflictException("INVALID_DATE", "No se pueden reservar turnos pasados.");
         }
 
-        var patient = await _persistence.First<Patient>(p => p.Dni == request.Patient.Dni.ToString());
+        var patient = await _persistence.First<Patient>(
+            p => p.UserId == patientUserId
+                && p.Dni == request.Patient.Dni.ToString()
+                && !p.Deleted);
         if (patient == null)
         {
-            _logger.LogWarning("Paciente con DNI {PatientDni} no encontrado al intentar reservar el slot {SlotId}.", request.Patient.Dni, slot.Id);
-            throw new ConflictException("PATIENT_NOT_FOUND", "El paciente no existe en el sistema.");
+            _logger.LogWarning(
+                "El usuario {UserId} intentó reservar para un DNI que no le pertenece.",
+                patientUserId);
+            throw new AuthorizationException();
         }
 
         var appointment = new Appointment
@@ -73,8 +82,6 @@ public class AppointmentService : IAppointmentService
             Reason = request.Reason,
             Status = AppointmentStatus.BOOKED
         };
-
-        slot.Status = SlotStatus.BOOKED;
 
         try
         {
@@ -147,11 +154,14 @@ public class AppointmentService : IAppointmentService
         }
     }
 
-    public async Task<object> GetActiveAppointmentsByPatientAsync(long dni)
+    public async Task<object> GetActiveAppointmentsByPatientAsync(long dni, Guid? patientUserId = null)
     {
         _logger.LogInformation("Consultando turnos activos para el paciente con DNI: {PatientDni}", dni);
 
-        var patient = await _persistence.First<Patient>(p => p.Dni == dni.ToString());
+        var patient = await _persistence.First<Patient>(
+            p => p.Dni == dni.ToString()
+                && !p.Deleted
+                && (!patientUserId.HasValue || p.UserId == patientUserId.Value));
 
         if (patient == null)
         {
@@ -182,18 +192,27 @@ public class AppointmentService : IAppointmentService
             Status = a.Status.ToString()
         }).ToList();
     }
-    public async Task CancelAppointmentAsync(Guid appointmentId)
+    public async Task CancelAppointmentAsync(Guid appointmentId, Guid? patientUserId = null)
     {
         _logger.LogInformation("Iniciando solicitud de cancelación");
 
         var appointment = await _persistence.First<Appointment>(
-            a => a.Id == appointmentId, "AvailabilitySlot"
+            a => a.Id == appointmentId, "AvailabilitySlot", "Patient"
         );
 
         if (appointment == null)
         {
             _logger.LogWarning("Cancelación fallida: No se encontró ningún turno registrado con el ID {AppointmentId}.", appointmentId);
             throw new ConflictException("APPOINTMENT_NOT_FOUND", "Turno no encontrado.");
+        }
+
+        if (patientUserId.HasValue && appointment.Patient?.UserId != patientUserId.Value)
+        {
+            _logger.LogWarning(
+                "El usuario paciente {UserId} intentó cancelar un turno ajeno {AppointmentId}.",
+                patientUserId.Value,
+                appointmentId);
+            throw new AuthorizationException();
         }
 
         if (appointment.Status != AppointmentStatus.BOOKED)
@@ -206,8 +225,11 @@ public class AppointmentService : IAppointmentService
         appointment.CancelledAt = DateTime.Now;
         appointment.AvailabilitySlot.Status = SlotStatus.AVAILABLE;
 
-        await _persistence.Update(appointment);
-        await _persistence.Update(appointment.AvailabilitySlot);
+        await _persistence.ExecuteInTransactionAsync(async () =>
+        {
+            await _persistence.Update(appointment);
+            await _persistence.Update(appointment.AvailabilitySlot);
+        });
 
         _logger.LogInformation("Turno {AppointmentId} cancelado exitosamente. El slot asociado ({SlotId}) ha sido marcado como disponible.", appointmentId, appointment.AvailabilitySlotId);
     }
@@ -274,8 +296,8 @@ public class AppointmentService : IAppointmentService
         (!specialtyId.HasValue || (a.AvailabilitySlot != null &&
             a.AvailabilitySlot.AvailabilityRule != null &&
             a.AvailabilitySlot.AvailabilityRule.Doctor != null &&
-            a.AvailabilitySlot.AvailabilityRule.Doctor.Speciality != null &&
-            a.AvailabilitySlot.AvailabilityRule.Doctor.Speciality.Id == specialtyId.Value));
+            a.AvailabilitySlot.AvailabilityRule.Doctor.Specialty != null &&
+            a.AvailabilitySlot.AvailabilityRule.Doctor.Specialty.Id == specialtyId.Value));
 
         System.Linq.Expressions.Expression<Func<Appointment, DateTime>> sortOrder = a => a.AvailabilitySlot.SlotDate;
 
@@ -284,7 +306,7 @@ public class AppointmentService : IAppointmentService
             pageIndex,
             predicate,
             sortOrder,
-            "AvailabilitySlot.AvailabilityRule.Doctor.Speciality",
+            "AvailabilitySlot.AvailabilityRule.Doctor.Specialty",
             "Patient"
         );
 
@@ -305,8 +327,8 @@ public class AppointmentService : IAppointmentService
                 DoctorId: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Id ?? Guid.Empty,
                 Name: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Name ?? "",
                 Specialty: new AppointmentModel.SpecialtyInfo(
-                    SpecialtyId: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Speciality?.Id ?? Guid.Empty,
-                    Name: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Speciality?.Name ?? "")
+                    SpecialtyId: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Specialty?.Id ?? Guid.Empty,
+                    Name: a.AvailabilitySlot?.AvailabilityRule?.Doctor?.Specialty?.Name ?? "")
             )));
 
         _logger.LogInformation("Búsqueda de turnos exitosa");

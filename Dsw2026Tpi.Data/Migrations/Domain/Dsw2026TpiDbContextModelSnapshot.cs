@@ -202,7 +202,7 @@ namespace Dsw2026Tpi.Data.Migrations.Domain
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<Guid>("SpecialityId")
+                    b.Property<Guid>("SpecialtyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -213,7 +213,7 @@ namespace Dsw2026Tpi.Data.Migrations.Domain
                     b.HasIndex("LicenseNumber")
                         .IsUnique();
 
-                    b.HasIndex("SpecialityId");
+                    b.HasIndex("SpecialtyId");
 
                     b.ToTable("Doctors", (string)null);
                 });
@@ -342,13 +342,13 @@ namespace Dsw2026Tpi.Data.Migrations.Domain
 
             modelBuilder.Entity("Dsw2026Tpi.Domain.Entities.Doctor", b =>
                 {
-                    b.HasOne("Dsw2026Tpi.Domain.Entities.Specialty", "Speciality")
+                    b.HasOne("Dsw2026Tpi.Domain.Entities.Specialty", "Specialty")
                         .WithMany("Doctors")
-                        .HasForeignKey("SpecialityId")
+                        .HasForeignKey("SpecialtyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Speciality");
+                    b.Navigation("Specialty");
                 });
 
             modelBuilder.Entity("Dsw2026Tpi.Domain.Entities.AvailabilityRule", b =>

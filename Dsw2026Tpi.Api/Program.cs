@@ -51,10 +51,10 @@ public class Program
                 app.UseSwaggerUI();
             }
 
+            app.UseCors();
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseRateLimiter();
-            app.UseCors();
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.MapControllers();
