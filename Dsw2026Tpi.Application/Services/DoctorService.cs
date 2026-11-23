@@ -3,6 +3,7 @@ using Dsw2026Tpi.Application.Interfaces;
 using Dsw2026Tpi.CrossCutting.Exceptions;
 using Dsw2026Tpi.CrossCutting.Resources;
 using Dsw2026Tpi.Domain.Entities;
+using Dsw2026Tpi.Domain.Enum;
 using Dsw2026Tpi.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Numerics;
@@ -52,11 +53,30 @@ public class DoctorService : IDoctorService
 
         if (rules == null || !rules.Any()) return [];
 
+        var today = DateTime.Today;
+        var currentTime = DateTime.Now.TimeOfDay;
+
         return rules.Select(r => new DoctorModel.AvailabilityResponse(
             r.Id,
             r.DayOfWeek.ToString(),
             r.StartTime.ToString(@"hh\:mm"),
-            r.EndTime.ToString(@"hh\:mm"))).ToList();
+            r.EndTime.ToString(@"hh\:mm"),
+            r.Slots
+                .Where(slot =>
+                    !slot.Deleted &&
+                    slot.Status == SlotStatus.AVAILABLE &&
+                    (slot.SlotDate.Date > today ||
+                     (slot.SlotDate.Date == today && slot.StartTime > currentTime)))
+                .OrderBy(slot => slot.SlotDate)
+                .ThenBy(slot => slot.StartTime)
+                .Select(slot => new DoctorModel.AvailabilitySlotResponse(
+                    slot.Id,
+                    slot.SlotDate.ToString("yyyy-MM-dd"),
+                    slot.StartTime.ToString(@"hh\:mm"),
+                    slot.EndTime.ToString(@"hh\:mm"),
+                    slot.Status.ToString()))
+                .ToList()
+        )).ToList();
 
     }
 

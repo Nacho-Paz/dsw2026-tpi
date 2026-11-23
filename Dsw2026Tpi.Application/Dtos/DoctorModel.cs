@@ -30,6 +30,20 @@ public record DoctorModel
        string? Name
     );
 
-    public record AvailabilityResponse(Guid Id, string Day, string StartTime, string EndTime);
+    public record AvailabilityResponse(
+       Guid Id,
+       string Day,
+       string StartTime,
+       string EndTime,
+       List<AvailabilitySlotResponse> Slots
+    );
+
+    public record AvailabilitySlotResponse(
+       Guid Id,
+       string SlotDate,
+       string StartTime,
+       string EndTime,
+       string Status
+    );
 }
 

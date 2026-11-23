@@ -9,7 +9,7 @@ namespace Dsw2026Tpi.Api.Controllers;
 
 [ApiController]
 [Route("api/doctors")]
-[Authorize(Policy = Policies.AdminPolicy)]
+[Authorize]
 [EnableRateLimiting("GeneralPolicy")]
 public class DoctorController : AppController
 {
@@ -21,6 +21,7 @@ public class DoctorController : AppController
     }
 
     [HttpGet]
+    [Authorize(Roles = Roles.Administrator + "," + Roles.Patient)]
     public async Task<IActionResult> GetAll([FromQuery] int pageSize, [FromQuery] int pageIndex, [FromQuery] string? name = null)
     {
         var doctors = await _service.GetAll(pageSize, pageIndex, name);
@@ -28,6 +29,7 @@ public class DoctorController : AppController
     }
 
     [HttpGet("{id:guid}/availabilities")]
+    [Authorize(Roles = Roles.Administrator + "," + Roles.Patient)]
     public async Task<IActionResult> GetAvailabilities(Guid id)
     {
         var availabilities = await _service.GetDoctorAvailabilities(id);
@@ -39,6 +41,7 @@ public class DoctorController : AppController
     }
 
     [HttpPost]
+    [Authorize(Policy = Policies.AdminPolicy)]
     public async Task<IActionResult> Create([FromBody] DoctorModel.Request model)
     {
         var createdDoctor = await _service.CreateDoctor(model);
@@ -50,6 +53,7 @@ public class DoctorController : AppController
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = Policies.AdminPolicy)]
     public async Task<IActionResult> Update(Guid id, [FromBody] DoctorModel.Request model)
     {
         var updatedDoctor = await _service.UpdateDoctor(id, model);
@@ -61,6 +65,7 @@ public class DoctorController : AppController
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = Policies.AdminPolicy)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var success = await _service.DeleteDoctor(id);

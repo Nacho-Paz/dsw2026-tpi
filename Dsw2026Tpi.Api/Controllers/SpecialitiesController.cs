@@ -10,7 +10,7 @@ namespace Dsw2026Tpi.Api.Controllers;
 
 [ApiController]
 [Route("api/specialties")]
-[Authorize(Roles = Roles.Administrator)]
+[Authorize]
 [EnableRateLimiting("GeneralPolicy")]
 public class SpecialtiesController : ControllerBase
 {
@@ -22,6 +22,7 @@ public class SpecialtiesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = Roles.Administrator + "," + Roles.Patient)]
     public async Task<ActionResult<Pagination<SpecialtyModel>>> Get([FromQuery] SpecialtyQueryFilter filter)
     {
         var result = await _specialtyService.GetSpecialties(filter);
@@ -29,6 +30,7 @@ public class SpecialtiesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.Administrator)]
     public async Task<IActionResult> Post([FromBody] SpecialtyCreateModel model)
     {
         var result = await _specialtyService.Createspecialty(model);
@@ -36,6 +38,7 @@ public class SpecialtiesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = Roles.Administrator)]
     public async Task<ActionResult<SpecialtyModel>> Put(Guid id, [FromBody] SpecialtyCreateModel model)
     {
         var result = await _specialtyService.UpdateSpecialty(id, model);
@@ -45,6 +48,7 @@ public class SpecialtiesController : ControllerBase
 
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = Roles.Administrator)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _specialtyService.DeleteSpecialty(id);
