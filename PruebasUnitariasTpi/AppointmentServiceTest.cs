@@ -42,6 +42,9 @@ namespace PruebasUnitariasTPI
             _mockPersistence
                 .First(Arg.Any<Expression<Func<Appointment, bool>>>(), Arg.Any<string[]>())
                 .Returns(Task.FromResult<Appointment?>(turnoSimulado));
+            _mockPersistence
+                .ExecuteInTransactionAsync(Arg.Any<Func<Task>>())
+                .Returns(call => call.Arg<Func<Task>>()!());
 
             // Act
             await service.CancelAppointmentAsync(turnoSimulado.Id, patientUserId);

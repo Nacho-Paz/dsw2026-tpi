@@ -179,7 +179,7 @@ public class AvailabilityService : IAvailabilityService
         }
     }
 
-    private async Task<List<AvailabilityRule>> GenerateRulesAndSlots(AvailabilityModel.Request request, int month, int year, HashSet<(DateTime Date, TimeSpan Time)> preservedSlots = null) //TODO: Ver eso
+    private async Task<List<AvailabilityRule>> GenerateRulesAndSlots(AvailabilityModel.Request request, int month, int year, HashSet<(DateTime Date, TimeSpan Time)>? preservedSlots = null) //TODO: Ver eso
     {
         _logger.LogInformation("Iniciando la validación y generación de reglas de disponibilidad y franjas horarias.");
 
